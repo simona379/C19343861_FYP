@@ -73,6 +73,7 @@ class EdYearStats(models.Model):
     
 # unmanaged model for the stats table
 class RoutingKeyDublinYearStat(models.Model):
+    id = models.BigAutoField(primary_key=True)
     year = models.IntegerField()
     routing_key = models.CharField(max_length=3)
     transactions = models.IntegerField()
