@@ -1,9 +1,6 @@
-
- # GeoDjango models
+# GeoDjango models
 from django.contrib.gis.db import models
 from django.contrib.gis.geos import Point
-
-
 
 class Property(models.Model):
     address = models.CharField(max_length=255)
@@ -73,4 +70,20 @@ class EdYearStats(models.Model):
 
     def __str__(self):
         return f"{self.ed.name} ({self.year})"
+    
+# unmanaged model for the stats table
+class RoutingKeyDublinYearStat(models.Model):
+    year = models.IntegerField()
+    routing_key = models.CharField(max_length=3)
+    transactions = models.IntegerField()
+    median_price = models.BigIntegerField()
+    yoy_percent = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+
+    class Meta:
+        managed = False
+        db_table = "routing_key_dublin_year_stats"
+        unique_together = (("year", "routing_key"),)
+
+    def __str__(self):
+        return f"{self.routing_key} ({self.year})"
 

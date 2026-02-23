@@ -1,7 +1,7 @@
 # Add Django Rest Framework API endpoint
 
 from rest_framework import serializers
-from .models import Property
+from .models import Property, RoutingKeyDublinYearStat
 
 class PropertySerializer(serializers.ModelSerializer):
     latitude = serializers.SerializerMethodField()
@@ -35,3 +35,10 @@ class PropertySerializer(serializers.ModelSerializer):
             return None
         # Distance is in metres when geography = True
         return round(dist.m / 1000.0, 3)
+    
+
+# Serializer for RK API point
+class RoutingKeyDublinYearStatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoutingKeyDublinYearStat
+        fields = ["year", "routing_key", "transactions", "median_price", "yoy_percent"]

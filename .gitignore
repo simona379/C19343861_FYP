@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.sqlite3
+*.pyc
 
 # Virtual environments
 venv/
@@ -35,3 +36,10 @@ docker-volume/
 # Credentials / local settings
 **/.env
 .env.local
+
+# Data files
+*.csv
+backend/data/raw/
+backend/data/processed/
+backend/data/tmp/
+backend/data/spatial/*.geojson
