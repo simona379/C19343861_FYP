@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+
+# Virtual environments
+venv/
+.env/
+.envrc
+*.egg-info/
+.eggs/
+
+# VS Code / IDE
+.vscode/
+.idea/
+*.swp
+
+# Django
+staticfiles/
+media/
+*.log
+
+# Docker
+*.pid
+*.seed
+*.log
+# If Docker volume exports etc:
+docker-volume/
+
+# Mac OS
+.DS_Store
+
+# Credentials / local settings
+**/.env
+.env.local

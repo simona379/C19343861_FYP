@@ -1,0 +1,21 @@
+
+{
+  "name": "Housing Affordability & Market Insights Map",
+  "short_name": "Housing Map",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1976d2",
+  "icons": [
+    {
+      "src": "/static/properties/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/static/properties/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

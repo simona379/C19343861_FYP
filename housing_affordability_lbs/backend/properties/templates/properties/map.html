@@ -1,0 +1,195 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Properties</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+        crossorigin="anonymous"
+        />
+
+    <!-- Mobile / PWA basics -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#1976d2">
+
+    <!--  Web app manifest for Housing affordability lbs
+    This manifest enables the application to function as a Progressive Web App (PWA) and allows users to install it on mobile devices or desktops.
+        - Defines how the app appears when installed (name, icons, theme).
+        - Controls the app’s startup behaviour via start_url and display mode.
+        - Supplies required app icons for install prompts on iOS/Android.
+        - The app is designed as a lightweight PWA: UI loads offline,
+            while property + amenities searches require internet access -->
+
+    <link rel="manifest" href="{% static 'properties/manifest.webmanifest' %}">
+    <link rel="icon" href="{% static 'properties/icons/icon-192.png' %}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" href="{% static 'properties/icons/icon-192.png' %}"> 
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <!-- polygon CSS -->
+    <link rel="stylesheet"
+      href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+
+    <!-- app CSS -->
+    <link rel="stylesheet" href="{% static 'properties/css/map.css' %}">
+
+    <!-- markercluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
+</head>
+
+<body>
+<div class="container-fluid">
+    <div class="row g-3">
+        <div class="app-layout">
+        <!-- LEFT SIDEBAR -->
+        <div class="col-12 col-lg-4 col-xl-3">
+
+            <div id="sidebar" class="bg-light p-3 rounded shadow-sm h-100">
+
+                <h2 class="h4 mb-3">Search Properties</h2>
+
+                <!-- Radius -->
+                <label class="form-label">Radius (km):</label>
+                <input id="radius-input" type="number" value="10" min="1" max="50"
+                       class="form-control mb-2">
+
+                <!-- Min price -->
+                <label for="min-price" class="form-label">Minimum Price (€):</label>
+                <input id="min-price" type="number" class="form-control mb-2"
+                       placeholder="e.g. 200000">
+
+                <!-- Max price -->
+                <label for="max-price" class="form-label">Maximum Price (€):</label>
+                <input id="max-price" type="number" class="form-control mb-3"
+                       placeholder="e.g. 600000">
+
+                <!-- Property type -->
+                <label for="property-type" class="form-label">Property Type:</label>
+                <select id="property-type" class="form-select mb-3">
+                    <option value="all">All types</option>
+                    <option value="Second-Hand Dwelling house /Apartment">
+                        Second-Hand Dwelling / Apartment
+                    </option>
+                    <option value="New Dwelling house /Apartment">
+                        New Dwelling / Apartment
+                    </option>
+                </select>
+
+                <!-- Amenity filters -->
+                <div class="filter-group mb-3">
+                    <h3 class="h6">Nearby Amenities</h3>
+
+                    <div class="form-check amenity-item">
+                        <input type="checkbox" id="amenity-education"
+                               class="form-check-input amenity-checkbox" value="education" checked>
+                        <label class="form-check-label" for="amenity-education">
+                            <span class="legend-dot legend-education"></span>
+                            Schools and Colleges
+                        </label>
+                    </div>
+
+                    <div class="form-check amenity-item">
+                        <input type="checkbox" id="amenity-parks"
+                               class="form-check-input amenity-checkbox" value="parks" checked>
+                        <label class="form-check-label" for="amenity-parks">
+                            <span class="legend-dot legend-parks"></span>
+                            Parks and Playgrounds
+                        </label>
+                    </div>
+
+                    <div class="form-check mb-2 amenity-item">
+                        <input type="checkbox" id="amenity-transport"
+                               class="form-check-input amenity-checkbox" value="transport" checked>
+                        <label class="form-check-label" for="amenity-transport">
+                            <span class="legend-dot legend-transport"></span>
+                            Public Transport
+                        </label>
+                    </div>
+
+                    <button id="amenities-btn" class="btn btn-outline-primary w-100">
+                        Load Amenities
+                    </button>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-grid gap-2 mb-3">
+                    <button id="locate-btn" class="btn btn-primary">Use My Location</button>
+                    <button id="refresh-btn" class="btn btn-secondary">Refresh Search</button>
+                    <button id="clear-btn" class="btn btn-outline-danger">Clear Results</button>
+                </div>
+
+                <hr>
+
+                <p class="tip small text-muted">
+                    <strong>Tip:</strong> Use the drawing tool on the map (top-left) to select an area.
+                </p>
+
+                <div id="summary-box" class="alert alert-info small">
+                    No search performed yet.
+                </div>
+
+                <div class="price-legend">
+                    <strong>Cluster Price Bands</strong><br>
+                    <span class="legend-dot legend-low"></span> Under €400,000<br>
+                    <span class="legend-dot legend-mid"></span> €400,000 – €699,999<br>
+                    <span class="legend-dot legend-high"></span> €700,000+
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT MAP SECTION  -->
+        <div class="col-12 col-lg-8 col-xl-9">
+            <div id="map" class="rounded shadow-sm"></div>
+        </div>
+    </div>
+    </div>
+</div>
+
+<!-- bootstrap JS-->
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+  crossorigin="anonymous"
+></script>
+
+<!-- register the service worker -->
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker
+        .register("{% url 'service-worker' %}")
+        .then(reg => {
+          console.log("Service worker registered with scope:", reg.scope);
+        })
+        .catch(err => {
+          console.warn("Service worker registration failed:", err);
+        });
+    });
+  }
+</script>
+
+<!-- Leaflet core JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Leaflet.draw plugin -->
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+
+<!-- markercluster JS -->
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<!-- app/map JS -->
+<script src="{% static 'properties/js/map.js' %}"></script>
+
+</body>
+</html>
