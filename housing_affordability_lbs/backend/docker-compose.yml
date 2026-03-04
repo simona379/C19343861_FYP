@@ -48,4 +48,5 @@ services:
 
 volumes:
   pgdata:
+  node_modules:
 
