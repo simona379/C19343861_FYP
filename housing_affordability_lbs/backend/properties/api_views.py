@@ -12,7 +12,9 @@ class RoutingKeyList(APIView):
         if not year:
             return Response({"error": "year query param is required (e.g. ?year=2025)"}, status=400)
 
-        qs = RoutingKeyDublinYearStat.objects.filter(year=int(year)).order_by("-transactions")
+        min_tx = int(request.query_params.get("min_tx", 30))
+        qs = RoutingKeyDublinYearStat.objects.filter(year=int(year), transactions__gte=min_tx).order_by("-transactions")
+
         return Response(RoutingKeyDublinYearStatSerializer(qs, many=True).data)
 
 
