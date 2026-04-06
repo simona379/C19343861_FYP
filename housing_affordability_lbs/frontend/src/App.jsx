@@ -87,20 +87,25 @@ export default function App() {
   // Load housing stats from Django
   useEffect(() => {
     fetch("/api/routing-keys/?year=2025")
-      .then(res => res.json())
-      .then(data => {
-
-        const lookup = {};
-
-        data.forEach(row => {
-          const key = String(row.routing_key).trim().toUpperCase();
-          lookup[key] = row;
-        });
-        setStats(lookup);
-        //console.log("API lookup:", lookup);
-        console.log("stats loaded", lookup);
-
+    .then(async (res) => {
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("API error response:", text);
+        throw new Error("API failed");
+      }
+      return res.json();
+    })
+    .then((data) => {
+      const lookup = {};
+      data.forEach(row => {
+        const key = String(row.routing_key).trim().toUpperCase();
+        lookup[key] = row;
       });
+      setStats(lookup);
+    })
+    .catch((err) => {
+      console.error("Stats fetch failed:", err);
+    });
   }, []);
 
   // Ranked area scoring system
