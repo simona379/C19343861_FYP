@@ -2,6 +2,16 @@ import { useEffect, useState } from "react";
 // import L from "leaflet";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend,
+} from "chart.js";
+import { Line } from "react-chartjs-2";
 
 function FitToFilteredData() {
   const map = useMap();
@@ -9,6 +19,15 @@ function FitToFilteredData() {
   useEffect(() => {
     map.setView([53.36, -6.20], 9.9);
   }, [map]);
+
+  ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Tooltip,
+    Legend
+  );
 
   return null;
 }
@@ -43,12 +62,15 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [activePanelTab, setActivePanelTab] = useState("selected");
   
+  // trend (chart) state
+  const [trendData, setTrendData] = useState([]);
 
   // Load routing key polygons
   useEffect(() => {
     fetch("/RoutingKeys_EIRE.geojson")
       .then(res => res.json())
       .then(data => setGeoData(data));
+
   }, []);
 
   const filteredGeoData =
@@ -94,6 +116,22 @@ export default function App() {
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
+
+    // fetch trend data when selected area changes
+    useEffect(() => {
+      if (!selectedKey) {
+        setTrendData([]);
+        return;
+      }
+
+      fetch(`http://178.62.25.85:8000/api/routing-keys/${selectedKey}/trend/`)
+        .then((res) => res.json())
+        .then((data) => setTrendData(data))
+        .catch((err) => {
+          console.error("Trend fetch error:", err);
+          setTrendData([]);
+        });
+    }, [selectedKey]);
 
 // -------------------------------------------------------------------------
   // Classification Function
@@ -208,6 +246,47 @@ export default function App() {
       Sales: ${area?.transactions || "0"}<br/>
       YoY change: ${area?.yoy_percent ?? "No data"}%
     `);
+
+// -------------------------------------------------------------------------
+  // Chart data object
+  const chartData = {
+    labels: trendData.map((row) => row.year),
+    datasets: [
+      {
+        label: "Median Price (€)",
+        data: trendData.map((row) => row.median_price),
+        borderColor: "#1d4ed8",
+        backgroundColor: "#1d4ed8",
+        tension: 0.25,
+      },
+    ],
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false,
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `€${context.raw.toLocaleString()}`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        ticks: {
+          callback: function (value) {
+            return `€${Number(value).toLocaleString()}`;
+          },
+        },
+      },
+    },
+  };
 
 };
 
@@ -442,29 +521,18 @@ return (
 
               <div
                 style={{
-                  height: "160px",
+                  height: "260px",
                   borderTop: "1px solid #e6e6e6",
                   paddingTop: "14px",
                 }}
               >
-                <div style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "60px" }}>
-                  Multi-year trend coming
-                </div>
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    fontSize: "14px",
-                    color: "#667085",
-                  }}
-                >
-                  <span>2020</span>
-                  <span>2021</span>
-                  <span>2022</span>
-                  <span>2023</span>
-                  <span>2024</span>
-                </div>
+                {trendData.length > 0 ? (
+                  <Line data={chartData} options={chartOptions} />
+                ) : (
+                  <div style={{ color: "#94a3b8", fontSize: "14px" }}>
+                    No trend data available
+                  </div>
+                )}
               </div>
             </>
         )}
