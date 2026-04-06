@@ -63,7 +63,7 @@ export default function App() {
 
   // Load housing stats from Django
   useEffect(() => {
-    fetch("/api/routing-keys/?year=2025")
+    fetch("http://178.62.25.85:8000/api/routing-keys/?year=2025")
       .then(res => res.json())
       .then(data => {
 
