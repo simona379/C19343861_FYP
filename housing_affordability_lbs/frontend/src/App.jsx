@@ -192,10 +192,10 @@ export default function App() {
       YoY change: ${area?.yoy_percent ?? "No data"}%
     `);
 
-  };
 };
 
-  return (
+
+return (
     <div
       style={{
         height: "100vh",
@@ -535,4 +535,5 @@ export default function App() {
         )}
       </div>
     </div>
-);
+  );
+}
