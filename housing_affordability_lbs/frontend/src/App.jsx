@@ -2,25 +2,7 @@ import { useEffect, useState } from "react";
 // import L from "leaflet";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-/*
-function FitToFilteredData({ data }) {
-  const map = useMap();
 
-  useEffect(() => {
-    if (!data || !data.features || data.features.length === 0) return;
-
-    const bounds = L.geoJSON(data).getBounds();
-
-    map.fitBounds(bounds, {
-      paddingTopLeft: [20, 20],
-      paddingBottomRight: [340, 40],
-      maxZoom: 10,
-    });
-  }, [data, map]);
-
-  return null;
-}
-*/
 function FitToFilteredData() {
   const map = useMap();
 
@@ -39,6 +21,13 @@ App()
 
 export default function App() {
 
+  const [geoData, setGeoData] = useState(null);
+  const [stats, setStats] = useState({});
+  
+  // add state
+  const [selectedKey, setSelectedKey] = useState(null);
+  const selectedArea = selectedKey ? stats[selectedKey] : null;
+
   // Budget State for Filters
   const [minBudget, setMinBudget] = useState(500000);
   const [maxBudget, setMaxBudget] = useState(750000);
@@ -49,12 +38,9 @@ export default function App() {
     transport: false,
   });
 
-  const [geoData, setGeoData] = useState(null);
-  const [stats, setStats] = useState({});
-  //const mapRef = useRef(null);
-  // add state
-  const [selectedKey, setSelectedKey] = useState(null);
-  const selectedArea = selectedKey ? stats[selectedKey] : null;
+  // State for sidebars
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   // Load routing key polygons
   useEffect(() => {
@@ -73,9 +59,6 @@ export default function App() {
           }),
         }
       : null;
-
-  //console.log("All features:", geoData?.features?.length);
-  //console.log("Filtered features:", filteredGeoData?.features?.length);
 
   // Load housing stats from Django
   useEffect(() => {
@@ -195,8 +178,9 @@ export default function App() {
           });
         },
 
-        click: (e) => {
+        click: () => {
           setSelectedKey(key);
+          setPanelOpen(true);
         }
 
     });
@@ -209,12 +193,12 @@ export default function App() {
     `);
 
   };
-
+};
 
   return (
-    <div 
-      style={{ 
-        height: "100vh", 
+    <div
+      style={{
+        height: "100vh",
         width: "100vw",
         position: "relative",
         overflow: "hidden",
@@ -222,58 +206,54 @@ export default function App() {
         background: "#f5f7fa",
       }}
     >
-
-    <div
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: "72px",
-        background: "#0b2a4a",
-        color: "white",
-        zIndex: 1000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 28px",
-        boxSizing: "border-box",
-      }}
-    >
-
-      <div>
-        <div style={{ fontSize: "24px", fontWeight: 800 }}>
-          myhousingmap.uk
-        </div>
-        <div style={{ fontSize: "13px", opacity: 0.9, marginTop: "2px" }}>
-          Interactive Housing Price Map
-        </div>
-      </div>
-
+      {/* Top bar */}
       <div
         style={{
-          background: "#17a35b",
-          padding: "8px 16px",
-          borderRadius: "999px",
-          fontSize: "14px",
-          fontWeight: 600,
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "72px",
+          background: "#0b2a4a",
+          color: "white",
+          zIndex: 1000,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 28px",
+          boxSizing: "border-box",
         }}
       >
-        Prototype Interface
+        <div>
+          <div style={{ fontSize: "24px", fontWeight: 800 }}>
+            myhousingmap.uk
+          </div>
+          <div style={{ fontSize: "13px", opacity: 0.9, marginTop: "2px" }}>
+            Interactive Housing Price Map
+          </div>
+        </div>
+
+        <div
+          style={{
+            background: "#17a35b",
+            padding: "8px 16px",
+            borderRadius: "999px",
+            fontSize: "14px",
+            fontWeight: 600,
+          }}
+        >
+          Prototype Interface
+        </div>
       </div>
-    </div>
 
+      {/* Map */}
       <MapContainer
-
         center={[53.3498, -6.2603]}
         zoom={7}
-
-        //whenCreated={(map) => (mapRef.current = map)}
-        
-        style={{ 
-          height: "calc(100% - 72px)", 
+        style={{
+          height: "calc(100% - 72px)",
           width: "100%",
-          marginTop: "72px", 
+          marginTop: "72px",
         }}
       >
         <TileLayer
@@ -290,60 +270,191 @@ export default function App() {
             onEachFeature={onEachFeature}
           />
         )}
-
       </MapContainer>
 
-      
-      
+      {/* Left insights panel */}
       <div
         style={{
           position: "absolute",
-          top: "120px",
-          right: "20px",
-          width: "270px",
-          maxHeight: "calc(100vh - 130px)",
+          top: "72px",
+          left: 0,
+          width: "380px",
+          height: "calc(100% - 72px)",
+          background: "white",
+          zIndex: 1200,
+          boxShadow: "4px 0 20px rgba(0,0,0,0.18)",
+          transform: panelOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.3s ease",
           overflowY: "auto",
-          zIndex: 1000,
-          display: "flex",
-          flexDirection: "column",
-          gap: "16px",
-          paddingRight: "4px",
-          scrollbarWidth: "thin",
+          pointerEvents: panelOpen ? "auto" : "none",
         }}
       >
         <div
           style={{
-            width: "270px",
-            background: "white",
-            borderRadius: "18px",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
-            zIndex: 1000,
-            overflow: "hidden",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "18px 20px",
+            borderBottom: "1px solid #e6e6e6",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "16px 18px",
-              borderBottom: "1px solid #e6e6e6",
-              fontSize: "15px",
-              fontWeight: 700,
-              color: "#1f2d3d",
-            }}
-          >
-            <span>Filters</span>
-            <span style={{ color: "#a0a7b4" }}>☰</span>
+          <div style={{ fontSize: "18px", fontWeight: 700, color: "#1f2d3d" }}>
+            Selected Area
           </div>
 
+          <button
+            onClick={() => setPanelOpen(false)}
+            style={{
+              border: "none",
+              background: "transparent",
+              fontSize: "22px",
+              cursor: "pointer",
+              color: "#667085",
+            }}
+          >
+            ×
+          </button>
+        </div>
 
+        <div style={{ padding: "20px" }}>
+          <div
+            style={{
+              display: "inline-block",
+              background: "#f4dd45",
+              borderRadius: "10px",
+              padding: "6px 10px",
+              fontWeight: 700,
+              fontSize: "15px",
+              marginBottom: "16px",
+            }}
+          >
+            {selectedKey || "—"}
+          </div>
 
-          <div style={{ padding: "10px" }}>
+          <div style={{ fontSize: "28px", fontWeight: 800, marginBottom: "18px" }}>
+            {selectedKey || "—"}
+          </div>
+
+          <div style={{ display: "grid", gap: "18px", marginBottom: "28px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+              <span>Median Price</span>
+              <strong>
+                {selectedArea?.median_price
+                  ? `€${selectedArea.median_price.toLocaleString()}`
+                  : "—"}
+              </strong>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+              <span>Transactions</span>
+              <strong>{selectedArea?.transactions || "—"}</strong>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+              <span>YoY Change</span>
+              <strong
+                style={{
+                  color:
+                    selectedArea?.yoy_percent > 0
+                      ? "#17a35b"
+                      : selectedArea?.yoy_percent < 0
+                      ? "#dc2626"
+                      : "#374151",
+                }}
+              >
+                {selectedArea?.yoy_percent != null
+                  ? `${selectedArea.yoy_percent}%`
+                  : "—"}
+              </strong>
+            </div>
+          </div>
+
+          <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "14px" }}>
+            Price Trend
+          </div>
+
+          <div
+            style={{
+              height: "160px",
+              borderTop: "1px solid #e6e6e6",
+              paddingTop: "14px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "14px",
+                color: "#667085",
+                marginTop: "100px",
+              }}
+            >
+              <span>2020</span>
+              <span>2021</span>
+              <span>2022</span>
+              <span>2023</span>
+              <span>2024</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right filters sidebar */}
+      <div
+        style={{
+          position: "absolute",
+          top: "72px",
+          right: 0,
+          width: filtersOpen ? "300px" : "64px",
+          height: "calc(100% - 72px)",
+          background: "white",
+          zIndex: 1100,
+          boxShadow: "-4px 0 20px rgba(0,0,0,0.15)",
+          transition: "width 0.3s ease",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "18px 20px",
+            borderBottom: "1px solid #e6e6e6",
+          }}
+        >
+          {filtersOpen && (
+            <div style={{ fontSize: "18px", fontWeight: 700, color: "#1f2d3d" }}>
+              Filters
+            </div>
+          )}
+
+          <button
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            style={{
+              border: "none",
+              background: "transparent",
+              fontSize: "20px",
+              cursor: "pointer",
+              color: "#667085",
+              marginLeft: "auto",
+            }}
+          >
+            ☰
+          </button>
+        </div>
+
+        {filtersOpen && (
+          <div
+            style={{
+              padding: "16px 20px",
+              overflowY: "auto",
+              height: "calc(100% - 65px)",
+            }}
+          >
             <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px" }}>
               Budget Range
             </div>
-
 
             <div style={{ display: "grid", gap: "10px", marginBottom: "18px" }}>
               <input
@@ -378,34 +489,29 @@ export default function App() {
                 fontSize: "14px",
                 fontWeight: 600,
                 color: "#374151",
-                marginBottom: "12px",
-                padding: "0 2px",
+                marginBottom: "20px",
               }}
             >
               <span>€{(minBudget / 1000).toFixed(0)}k</span>
               <span>€{(maxBudget / 1000).toFixed(0)}k</span>
             </div>
 
-
-
-
-
             <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px" }}>
               Area Suitability
             </div>
 
-            <div style={{ display: "grid", gap: "8px", marginBottom: "14px" }}>
+            <div style={{ display: "grid", gap: "8px", marginBottom: "16px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                 <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
                 Best match
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#f4e04d", display: "inline-block" }} />
-                Close to budget
+                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#f97316", display: "inline-block" }} />
+                Close match
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#ef4444", display: "inline-block" }} />
-                Outside range
+                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#7f1d1d", display: "inline-block" }} />
+                Not suitable
               </div>
             </div>
 
@@ -425,148 +531,8 @@ export default function App() {
             >
               Filters update automatically
             </button>
-
           </div>
-        </div>
-
-        <div
-          style={{
-            width: "270px",
-            background: "white",
-            borderRadius: "18px",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.18)",
-            overflow: "hidden",
-            flexShrink: 0,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "16px 18px",
-              borderBottom: "1px solid #e6e6e6",
-            }}
-          >
-
-
-            <div style={{ fontSize: "15px", fontWeight: 700, color: "#1f2d3d" }}>
-              Selected Area
-            </div>
-            <div
-              style={{
-                background: "#f4dd45",
-                borderRadius: "10px",
-                padding: "6px 10px",
-                fontWeight: 700,
-                fontSize: "15px",
-              }}
-            >
-              {selectedKey || "—"}
-            </div>
-          </div>
-
-          <div style={{ padding: "18px" }}>
-            {!selectedKey && (
-              <div style={{ fontSize: "13px", color: "#6b7280", marginBottom: "10px" }}>
-                Select a region on the map
-              </div>
-            )}
-
-            <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "12px" }}>
-             {selectedKey || "—"}
-            </div>
-
-            <div style={{ display: "grid", gap: "14px", marginBottom: "24px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "16px" }}>
-                <span>Median Price</span>
-                <strong>
-                  {selectedArea?.median_price
-                    ? `€${selectedArea.median_price.toLocaleString()}`
-                    : "—"}
-              </strong>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "16px" }}>
-                <span>Transactions</span>
-                <strong>
-                  {selectedArea?.transactions || "—"}
-                </strong>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "16px" }}>
-                <span>YoY Change</span>
-                <strong style={{ 
-                  color:     
-                    selectedArea?.yoy_percent > 0
-                    ? "#17a35b"
-                    : selectedArea?.yoy_percent < 0
-                    ? "#dc2626"
-                    : "#374151" }}>
-                  {selectedArea?.yoy_percent != null
-                    ? `${selectedArea.yoy_percent}%`
-                    : "—"}
-                </strong>
-              </div>
-            </div>
-
-            <div style={{ fontSize: "17px", fontWeight: 700, marginBottom: "12px" }}>
-              Price Trend
-            </div>
-
-            <div
-              style={{
-                height: "120px",
-                borderTop: "1px solid #e6e6e6",
-                position: "relative",
-                paddingTop: "10px",
-              }}
-            >
-
-
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: "13px",
-                  color: "#667085",
-                  marginTop: "2px",
-                }}
-              >
-                <span>2020</span>
-                <span>2021</span>
-                <span>2022</span>
-                <span>2023</span>
-                <span>2024</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>  
-
-
-
-      <div
-        style={{
-          position: "absolute",
-          bottom: 24,
-          left: 16,
-          background: "white",
-          padding: "10px 12px",
-          borderRadius: "10px",
-          boxShadow: "0 8px 20px rgba(0,0,0,0.18)",
-          fontSize: "13px",
-          zIndex: 1000,
-          lineHeight: 1.7,
-        }}
-      >
-
-       <b>Median Price (€)</b><br/>
-        <div><span style={{ background:"#7f1d1d", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> Not Suitable for requirements</div>
-        <div><span style={{ background:"#f97316", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> Close Match</div>
-        <div><span style={{ background:"#22c55e", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> Best Match</div>
+        )}
       </div>
-
     </div>
-  );
-}
+);
