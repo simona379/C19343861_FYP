@@ -13,21 +13,21 @@ import {
 } from "chart.js";
 import { Line } from "react-chartjs-2";
 
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend
+);
+
 function FitToFilteredData() {
   const map = useMap();
 
   useEffect(() => {
     map.setView([53.36, -6.20], 9.9);
   }, [map]);
-
-  ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Tooltip,
-    Legend
-  );
 
   return null;
 }
@@ -42,7 +42,7 @@ export default function App() {
 
   const [geoData, setGeoData] = useState(null);
   const [stats, setStats] = useState({});
-  
+
   // add state
   const [selectedKey, setSelectedKey] = useState(null);
   const selectedArea = selectedKey ? stats[selectedKey] : null;
@@ -61,7 +61,7 @@ export default function App() {
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(false);
   const [activePanelTab, setActivePanelTab] = useState("selected");
-  
+
   // trend (chart) state
   const [trendData, setTrendData] = useState([]);
 
@@ -76,17 +76,17 @@ export default function App() {
   const filteredGeoData =
     geoData && Object.keys(stats).length > 0
       ? {
-          type: "FeatureCollection",
-          features: geoData.features.filter((feature) => {
-            const key = String(feature.properties.RoutingKey).trim().toUpperCase();
-            return Object.prototype.hasOwnProperty.call(stats, key);
-          }),
-        }
+        type: "FeatureCollection",
+        features: geoData.features.filter((feature) => {
+          const key = String(feature.properties.RoutingKey).trim().toUpperCase();
+          return Object.prototype.hasOwnProperty.call(stats, key);
+        }),
+      }
       : null;
 
   // Load housing stats from Django
   useEffect(() => {
-    fetch("http://178.62.25.85:8000/api/routing-keys/?year=2025")
+    fetch("/api/routing-keys/?year=2025")
       .then(res => res.json())
       .then(data => {
 
@@ -117,81 +117,81 @@ export default function App() {
     .sort((a, b) => b.score - a.score)
     .slice(0, 5);
 
-    // fetch trend data when selected area changes
-    useEffect(() => {
-      if (!selectedKey) {
+  // fetch trend data when selected area changes
+  useEffect(() => {
+    if (!selectedKey) {
+      setTrendData([]);
+      return;
+    }
+
+    fetch(`/api/routing-keys/${selectedKey}/trend/`)
+      .then((res) => res.json())
+      .then((data) => setTrendData(data))
+      .catch((err) => {
+        console.error("Trend fetch error:", err);
         setTrendData([]);
-        return;
-      }
+      });
+  }, [selectedKey]);
 
-      fetch(`http://178.62.25.85:8000/api/routing-keys/${selectedKey}/trend/`)
-        .then((res) => res.json())
-        .then((data) => setTrendData(data))
-        .catch((err) => {
-          console.error("Trend fetch error:", err);
-          setTrendData([]);
-        });
-    }, [selectedKey]);
-
-// -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // Classification Function
   function classifyArea(area, filters) {
 
-      if (!area) return { status: "no-data", score: 0 };
+    if (!area) return { status: "no-data", score: 0 };
 
-      let score = 0;
-      let checks = 0;
+    let score = 0;
+    let checks = 0;
 
-      if (filters.budget) {
-        checks += 1;
+    if (filters.budget) {
+      checks += 1;
 
-        const price = area.median_price;
-        const min = minBudget;
-        const max = maxBudget;
+      const price = area.median_price;
+      const min = minBudget;
+      const max = maxBudget;
 
-        if (price >= min && price <= max) {
-          score += 1;
-        } else {
+      if (price >= min && price <= max) {
+        score += 1;
+      } else {
 
-            const tolerance = 50000;
-            if (
-              (price >= min - tolerance && price < min) ||
-              (price > max && price <= max + tolerance)
-            ) {
-              score += 0.5;
-            }
+        const tolerance = 50000;
+        if (
+          (price >= min - tolerance && price < min) ||
+          (price > max && price <= max + tolerance)
+        ) {
+          score += 0.5;
         }
       }
+    }
 
-      // future filters go here
-      // if (filters.schools) { ... }
-      // if (filters.parks) { ... }
-      // if (filters.transport) { ... }
+    // future filters go here
+    // if (filters.schools) { ... }
+    // if (filters.parks) { ... }
+    // if (filters.transport) { ... }
 
-      if (checks === 0) return { status: "neutral", score: 0 };
+    if (checks === 0) return { status: "neutral", score: 0 };
 
-      const ratio = score / checks;
+    const ratio = score / checks;
 
-      if (ratio >= 1) return { status: "best-match", score: ratio };
-      if (ratio >= 0.5) return { status: "close-match", score: ratio };
-      return { status: "outside-range", score: ratio };
+    if (ratio >= 1) return { status: "best-match", score: ratio };
+    if (ratio >= 0.5) return { status: "close-match", score: ratio };
+    return { status: "outside-range", score: ratio };
 
   }
 
-// -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
 
-// Map status to colour
+  // Map status to colour
 
   function getSuitabilityColour(status) {
 
     if (status === "best-match") return "#22c55e"; // green
     if (status === "close-match") return "#f97316";   // orange
     if (status === "outside-range") return "#7f1d1d";   // dark red
-    return "#e5e7eb";      
+    return "#e5e7eb";
 
   };
 
-// style function
+  // style function
 
   const style = (feature) => {
     const key = String(feature.properties.RoutingKey).trim().toUpperCase();
@@ -207,7 +207,7 @@ export default function App() {
     };
   };
 
-// onEachFeature function
+  // onEachFeature function
 
   const onEachFeature = (feature, layer) => {
 
@@ -216,27 +216,27 @@ export default function App() {
 
     layer.on({
 
-        mouseover: (e) => {
-          e.target.setStyle({
-            weight: 3,
-            color: "#000",
-            fillOpacity: 0.9,
-          });
-        },
+      mouseover: (e) => {
+        e.target.setStyle({
+          weight: 3,
+          color: "#000",
+          fillOpacity: 0.9,
+        });
+      },
 
-        mouseout: (e) => {
-          e.target.setStyle({
+      mouseout: (e) => {
+        e.target.setStyle({
           weight: 1,
           color: "#333",
           fillOpacity: 0.7,
-          });
-        },
+        });
+      },
 
-        click: () => {
-          setSelectedKey(key);
-          setActivePanelTab("selected");
-          setPanelOpen(true);
-        }
+      click: () => {
+        setSelectedKey(key);
+        setActivePanelTab("selected");
+        setPanelOpen(true);
+      }
 
     });
 
@@ -246,8 +246,9 @@ export default function App() {
       Sales: ${area?.transactions || "0"}<br/>
       YoY change: ${area?.yoy_percent ?? "No data"}%
     `);
+  };
 
-// -------------------------------------------------------------------------
+  // -------------------------------------------------------------------------
   // Chart data object
   const chartData = {
     labels: trendData.map((row) => row.year),
@@ -288,10 +289,8 @@ export default function App() {
     },
   };
 
-};
 
-
-return (
+  return (
     <div
       style={{
         height: "100vh",
@@ -474,9 +473,9 @@ return (
               </div>
 
               <div style={{ marginTop: "10px", marginBottom: "18px", fontSize: "14px", color: "#475569" }}>
-                {selectedArea && 
+                {selectedArea &&
                   (selectedArea.median_price >= minBudget &&
-                  selectedArea.median_price <= maxBudget
+                    selectedArea.median_price <= maxBudget
                     ? "✔ Within your budget"
                     : "✖ Outside your budget")}
               </div>
@@ -504,8 +503,8 @@ return (
                         selectedArea?.yoy_percent > 0
                           ? "#17a35b"
                           : selectedArea?.yoy_percent < 0
-                          ? "#dc2626"
-                          : "#374151",
+                            ? "#dc2626"
+                            : "#374151",
                     }}
                   >
                     {selectedArea?.yoy_percent != null
@@ -535,67 +534,67 @@ return (
                 )}
               </div>
             </>
-        )}
+          )}
 
-        {activePanelTab === "rankings" && (
-          <>
-            <div style={{ fontSize: "24px", fontWeight: 800, marginBottom: "18px" }}>
-              Top Matching Areas
-            </div>
+          {activePanelTab === "rankings" && (
+            <>
+              <div style={{ fontSize: "24px", fontWeight: 800, marginBottom: "18px" }}>
+                Top Matching Areas
+              </div>
 
-            <div style={{ display: "grid", gap: "12px" }}>
-              {rankedAreas.map((item, index) => (
-                <div
-                  key={item.key}
-                  onClick={() => {
-                    setSelectedKey(item.key);
-                    setActivePanelTab("selected");
-                  }}
-                  style={{
-                    border: "1px solid #e6e6e6",
-                    borderRadius: "12px",
-                    padding: "14px",
-                    cursor: "pointer",
-                    background: "white",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                    <strong>
-                      {index + 1}. {item.key}
-                    </strong>
-                    <span
-                      style={{
-                        fontSize: "13px",
-                        fontWeight: 700,
-                        color:
-                          item.status === "best-match"
-                            ? "#17a35b"
-                            : item.status === "close-match"
-                            ? "#f97316"
-                            : "#7f1d1d",
-                      }}
-                    >
-                      {item.status === "best-match"
-                        ? "Best match"
-                        : item.status === "close-match"
-                        ? "Close match"
-                        : "Not suitable"}
-                    </span>
-                  </div>
+              <div style={{ display: "grid", gap: "12px" }}>
+                {rankedAreas.map((item, index) => (
+                  <div
+                    key={item.key}
+                    onClick={() => {
+                      setSelectedKey(item.key);
+                      setActivePanelTab("selected");
+                    }}
+                    style={{
+                      border: "1px solid #e6e6e6",
+                      borderRadius: "12px",
+                      padding: "14px",
+                      cursor: "pointer",
+                      background: "white",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                      <strong>
+                        {index + 1}. {item.key}
+                      </strong>
+                      <span
+                        style={{
+                          fontSize: "13px",
+                          fontWeight: 700,
+                          color:
+                            item.status === "best-match"
+                              ? "#17a35b"
+                              : item.status === "close-match"
+                                ? "#f97316"
+                                : "#7f1d1d",
+                        }}
+                      >
+                        {item.status === "best-match"
+                          ? "Best match"
+                          : item.status === "close-match"
+                            ? "Close match"
+                            : "Not suitable"}
+                      </span>
+                    </div>
 
-                  <div style={{ fontSize: "14px", color: "#475569" }}>
-                    Median price: €{item.area.median_price.toLocaleString()}
+                    <div style={{ fontSize: "14px", color: "#475569" }}>
+                      Median price: €{item.area.median_price.toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: "14px", color: "#475569" }}>
+                      Transactions: {item.area.transactions}
+                    </div>
                   </div>
-                  <div style={{ fontSize: "14px", color: "#475569" }}>
-                    Transactions: {item.area.transactions}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </div>
-    </div>
 
       {/* Right filters sidebar */}
       <div
