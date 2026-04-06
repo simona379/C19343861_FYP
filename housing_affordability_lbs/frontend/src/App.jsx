@@ -130,13 +130,19 @@ export default function App() {
     }
 
     fetch(`/api/routing-keys/${selectedKey}/trend/`)
-      .then((res) => res.json())
-      .then((data) => setTrendData(data))
-      .catch((err) => {
-        console.error("Trend fetch error:", err);
-        setTrendData([]);
-      });
-  }, [selectedKey]);
+      .then(async (res) => {
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || "Failed to load trend");
+          }
+          return res.json();
+        })
+        .then((data) => setTrendData(data))
+        .catch((err) => {
+          console.error("Trend fetch error:", err);
+          setTrendData([]);
+        });
+    }, [selectedKey]);
 
   // -------------------------------------------------------------------------
   // Classification Function
