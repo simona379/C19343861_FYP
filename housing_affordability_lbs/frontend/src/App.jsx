@@ -195,7 +195,7 @@ export default function App() {
         },
 
         click: () => {
-          setSelectedKey(item.key);
+          setSelectedKey(key);
           setActivePanelTab("selected");
           setPanelOpen(true);
         }
