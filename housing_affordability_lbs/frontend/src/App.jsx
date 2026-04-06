@@ -75,6 +75,8 @@ export default function App() {
         });
         setStats(lookup);
         //console.log("API lookup:", lookup);
+        console.log("stats loaded", lookup);
+
       });
   }, []);
 
@@ -156,6 +158,7 @@ export default function App() {
     `);
   };
 
+  console.log("filtered count", filteredGeoData?.features?.length);
 
 
   return (
