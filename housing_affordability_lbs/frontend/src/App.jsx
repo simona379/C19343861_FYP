@@ -25,22 +25,20 @@ function FitToFilteredData() {
   const map = useMap();
 
   useEffect(() => {
-    fetch("/api/routing-keys/D06/trend/")
-      .then(res => res.json())
-      .then(data => console.log("TREND:", data));
-    }, []);
-
-  useEffect(() => {
     map.setView([53.36, -6.20], 9.9);
   }, [map]);
 
   return null;
 }
 
+// App()
 export default function App() {
   const [geoData, setGeoData] = useState(null);
   const [stats, setStats] = useState({});
   //const mapRef = useRef(null);
+  // add state
+  const [selectedKey, setSelectedKey] = useState(null);
+  const selectedArea = selectedKey ? stats[selectedKey] : null;
 
   // Load routing key polygons
   useEffect(() => {
@@ -117,6 +115,11 @@ export default function App() {
 
   const onEachFeature = (feature, layer) => {
 
+     const key = String(feature.properties.RoutingKey).trim().toUpperCase();
+     const area = stats[key];
+
+     
+
      layer.on({
         mouseover: (e) => {
           e.target.setStyle({
@@ -132,11 +135,15 @@ export default function App() {
           color: "#333",
           fillOpacity: 0.7,
           });
+        },
+
+        click: (e) => {
+          setSelectedKey(key);
         }
+
      });
 
-    const key = String(feature.properties.RoutingKey).trim().toUpperCase();
-    const area = stats[key];
+
 
     //console.log("GeoJSON key:", key);
     //console.log("Matched row:", area);
@@ -399,8 +406,10 @@ export default function App() {
               borderBottom: "1px solid #e6e6e6",
             }}
           >
+
+
             <div style={{ fontSize: "15px", fontWeight: 700, color: "#1f2d3d" }}>
-              Selected Area
+              {selectedKey ? `Area ${selectedKey}` : "Click an area"}
             </div>
             <div
               style={{
@@ -411,27 +420,51 @@ export default function App() {
                 fontSize: "15px",
               }}
             >
-              D06
+              {selectedKey || "—"}
             </div>
           </div>
 
           <div style={{ padding: "18px" }}>
+            {!selectedKey && (
+              <div style={{ fontSize: "13px", color: "#6b7280", marginBottom: "10px" }}>
+                Select a region on the map
+              </div>
+            )}
+
             <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "12px" }}>
-              Rathmines (D06)
+             {selectedKey || "—"}
             </div>
 
             <div style={{ display: "grid", gap: "14px", marginBottom: "24px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "16px" }}>
                 <span>Median Price</span>
-                <strong>€635,000</strong>
+                <strong>
+                  {selectedArea?.median_price
+                    ? `€${selectedArea.median_price.toLocaleString()}`
+                    : "—"}
+              </strong>
               </div>
+
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "16px" }}>
                 <span>Transactions</span>
-                <strong>142</strong>
+                <strong>
+                  {selectedArea?.transactions || "—"}
+                </strong>
               </div>
+
               <div style={{ display: "flex", justifyContent: "space-between", fontSize: "16px" }}>
                 <span>YoY Change</span>
-                <strong style={{ color: "#17a35b" }}>+6.2%</strong>
+                <strong style={{ 
+                  color:     
+                    selectedArea?.yoy_percent > 0
+                    ? "#17a35b"
+                    : selectedArea?.yoy_percent < 0
+                    ? "#dc2626"
+                    : "#374151" }}>
+                  {selectedArea?.yoy_percent != null
+                    ? `${selectedArea.yoy_percent}%`
+                    : "—"}
+                </strong>
               </div>
             </div>
 
@@ -447,19 +480,7 @@ export default function App() {
                 paddingTop: "10px",
               }}
             >
-              <svg viewBox="0 0 240 100" style={{ width: "100%", height: "80px" }}>
-                <polyline
-                  fill="none"
-                  stroke="#1d5fa7"
-                  strokeWidth="3"
-                  points="10,80 55,65 105,50 165,35 225,10"
-                />
-                <circle cx="10" cy="80" r="4" fill="#1d5fa7" />
-                <circle cx="55" cy="65" r="4" fill="#1d5fa7" />
-                <circle cx="105" cy="50" r="4" fill="#1d5fa7" />
-                <circle cx="165" cy="35" r="4" fill="#1d5fa7" />
-                <circle cx="225" cy="10" r="4" fill="#1d5fa7" />
-              </svg>
+
 
               <div
                 style={{
