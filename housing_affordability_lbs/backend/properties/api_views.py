@@ -33,3 +33,22 @@ class RoutingKeyDetail(APIView):
             return Response({"error": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
         return Response(RoutingKeyDublinYearStatSerializer(obj).data)
+    
+
+class RoutingKeyTrend(APIView):
+    def get(self, request, routing_key):
+        qs = RoutingKeyDublinYearStat.objects.filter(
+            routing_key=routing_key.upper()
+        ).order_by("year")
+
+        data = [
+            {
+                "year": row.year,
+                "median_price": row.median_price,
+                "transactions": row.transactions,
+                "yoy_percent": row.yoy_percent,
+            }
+            for row in qs
+        ]
+
+        return Response(data)
