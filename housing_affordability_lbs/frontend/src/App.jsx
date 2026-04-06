@@ -38,9 +38,11 @@ export default function App() {
     transport: false,
   });
 
-  // State for sidebars
+  // State for sidebar panels
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [activePanelTab, setActivePanelTab] = useState("selected");
+  
 
   // Load routing key polygons
   useEffect(() => {
@@ -78,6 +80,20 @@ export default function App() {
 
       });
   }, []);
+
+  // Ranked area scoring system
+  const rankedAreas = Object.entries(stats)
+    .map(([key, area]) => {
+      const result = classifyArea(area, activeFilters);
+      return {
+        key,
+        area,
+        status: result.status,
+        score: result.score,
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
 
 // -------------------------------------------------------------------------
   // Classification Function
@@ -179,7 +195,8 @@ export default function App() {
         },
 
         click: () => {
-          setSelectedKey(key);
+          setSelectedKey(item.key);
+          setActivePanelTab("selected");
           setPanelOpen(true);
         }
 
@@ -312,92 +329,205 @@ return (
               color: "#667085",
             }}
           >
-            ×
+            x
           </button>
         </div>
 
-        <div style={{ padding: "20px" }}>
-          <div
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            padding: "16px 20px 0 20px",
+          }}
+        >
+          <button
+            onClick={() => setActivePanelTab("selected")}
             style={{
-              display: "inline-block",
-              background: "#f4dd45",
+              border: "none",
               borderRadius: "10px",
-              padding: "6px 10px",
+              padding: "8px 12px",
               fontWeight: 700,
-              fontSize: "15px",
-              marginBottom: "16px",
+              cursor: "pointer",
+              background: activePanelTab === "selected" ? "#0b2a4a" : "#e5e7eb",
+              color: activePanelTab === "selected" ? "white" : "#1f2d3d",
             }}
           >
-            {selectedKey || "—"}
-          </div>
+            Selected Area
+          </button>
 
-          <div style={{ fontSize: "28px", fontWeight: 800, marginBottom: "18px" }}>
-            {selectedKey || "—"}
-          </div>
+          <button
+            onClick={() => setActivePanelTab("rankings")}
+            style={{
+              border: "none",
+              borderRadius: "10px",
+              padding: "8px 12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              background: activePanelTab === "rankings" ? "#0b2a4a" : "#e5e7eb",
+              color: activePanelTab === "rankings" ? "white" : "#1f2d3d",
+            }}
+          >
+            Rankings
+          </button>
+        </div>
 
-          <div style={{ display: "grid", gap: "18px", marginBottom: "28px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-              <span>Median Price</span>
-              <strong>
-                {selectedArea?.median_price
-                  ? `€${selectedArea.median_price.toLocaleString()}`
-                  : "—"}
-              </strong>
-            </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-              <span>Transactions</span>
-              <strong>{selectedArea?.transactions || "—"}</strong>
-            </div>
 
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-              <span>YoY Change</span>
-              <strong
+        <div style={{ padding: "24px" }}>
+          {activePanelTab === "selected" && (
+            <>
+              <div
                 style={{
-                  color:
-                    selectedArea?.yoy_percent > 0
-                      ? "#17a35b"
-                      : selectedArea?.yoy_percent < 0
-                      ? "#dc2626"
-                      : "#374151",
+                  display: "inline-block",
+                  background: "#f4dd45",
+                  borderRadius: "10px",
+                  padding: "6px 10px",
+                  fontWeight: 700,
+                  fontSize: "15px",
+                  marginBottom: "16px",
                 }}
               >
-                {selectedArea?.yoy_percent != null
-                  ? `${selectedArea.yoy_percent}%`
-                  : "—"}
-              </strong>
-            </div>
-          </div>
+                {selectedKey || "—"}
+              </div>
 
-          <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "14px" }}>
-            Price Trend
-          </div>
+              <div style={{ fontSize: "28px", fontWeight: 800, marginBottom: "18px" }}>
+                {selectedKey || "—"}
+              </div>
 
-          <div
-            style={{
-              height: "160px",
-              borderTop: "1px solid #e6e6e6",
-              paddingTop: "14px",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "14px",
-                color: "#667085",
-                marginTop: "100px",
-              }}
-            >
-              <span>2020</span>
-              <span>2021</span>
-              <span>2022</span>
-              <span>2023</span>
-              <span>2024</span>
+              <div style={{ marginTop: "10px", marginBottom: "18px", fontSize: "14px", color: "#475569" }}>
+                {selectedArea && 
+                  (selectedArea.median_price >= minBudget &&
+                  selectedArea.median_price <= maxBudget
+                    ? "✔ Within your budget"
+                    : "✖ Outside your budget")}
+              </div>
+
+              <div style={{ display: "grid", gap: "18px", marginBottom: "28px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Median Price</span>
+                  <strong>
+                    {selectedArea?.median_price
+                      ? `€${selectedArea.median_price.toLocaleString()}`
+                      : "—"}
+                  </strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Transactions</span>
+                  <strong>{selectedArea?.transactions || "—"}</strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>YoY Change</span>
+                  <strong
+                    style={{
+                      color:
+                        selectedArea?.yoy_percent > 0
+                          ? "#17a35b"
+                          : selectedArea?.yoy_percent < 0
+                          ? "#dc2626"
+                          : "#374151",
+                    }}
+                  >
+                    {selectedArea?.yoy_percent != null
+                      ? `${selectedArea.yoy_percent}%`
+                      : "—"}
+                  </strong>
+                </div>
+              </div>
+
+              <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "14px" }}>
+                Price Trend
+              </div>
+
+              <div
+                style={{
+                  height: "160px",
+                  borderTop: "1px solid #e6e6e6",
+                  paddingTop: "14px",
+                }}
+              >
+                <div style={{ color: "#94a3b8", fontSize: "14px", marginBottom: "60px" }}>
+                  Multi-year trend coming
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "14px",
+                    color: "#667085",
+                  }}
+                >
+                  <span>2020</span>
+                  <span>2021</span>
+                  <span>2022</span>
+                  <span>2023</span>
+                  <span>2024</span>
+                </div>
+              </div>
+            </>
+        )}
+
+        {activePanelTab === "rankings" && (
+          <>
+            <div style={{ fontSize: "24px", fontWeight: 800, marginBottom: "18px" }}>
+              Top Matching Areas
             </div>
-          </div>
-        </div>
+
+            <div style={{ display: "grid", gap: "12px" }}>
+              {rankedAreas.map((item, index) => (
+                <div
+                  key={item.key}
+                  onClick={() => {
+                    setSelectedKey(item.key);
+                    setActivePanelTab("selected");
+                  }}
+                  style={{
+                    border: "1px solid #e6e6e6",
+                    borderRadius: "12px",
+                    padding: "14px",
+                    cursor: "pointer",
+                    background: "white",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+                    <strong>
+                      {index + 1}. {item.key}
+                    </strong>
+                    <span
+                      style={{
+                        fontSize: "13px",
+                        fontWeight: 700,
+                        color:
+                          item.status === "best-match"
+                            ? "#17a35b"
+                            : item.status === "close-match"
+                            ? "#f97316"
+                            : "#7f1d1d",
+                      }}
+                    >
+                      {item.status === "best-match"
+                        ? "Best match"
+                        : item.status === "close-match"
+                        ? "Close match"
+                        : "Not suitable"}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: "14px", color: "#475569" }}>
+                    Median price: €{item.area.median_price.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: "14px", color: "#475569" }}>
+                    Transactions: {item.area.transactions}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
+    </div>
 
       {/* Right filters sidebar */}
       <div
