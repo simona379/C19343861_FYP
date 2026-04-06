@@ -169,16 +169,16 @@ export default function App() {
       fillOpacity: 0.7,
     };
   };
-  
+
+// onEachFeature function
 
   const onEachFeature = (feature, layer) => {
 
-     const key = String(feature.properties.RoutingKey).trim().toUpperCase();
-     const area = stats[key];
+    const key = String(feature.properties.RoutingKey).trim().toUpperCase();
+    const area = stats[key];
 
-     
+    layer.on({
 
-     layer.on({
         mouseover: (e) => {
           e.target.setStyle({
             weight: 3,
@@ -199,12 +199,7 @@ export default function App() {
           setSelectedKey(key);
         }
 
-     });
-
-
-
-    //console.log("GeoJSON key:", key);
-    //console.log("Matched row:", area);
+    });
 
     layer.bindPopup(`
       <b>${key}</b><br/>
@@ -212,9 +207,8 @@ export default function App() {
       Sales: ${area?.transactions || "0"}<br/>
       YoY change: ${area?.yoy_percent ?? "No data"}%
     `);
-  };
 
-  console.log("filtered count", filteredGeoData?.features?.length);
+  };
 
 
   return (
@@ -343,53 +337,36 @@ export default function App() {
             <span style={{ color: "#a0a7b4" }}>☰</span>
           </div>
 
+
+
           <div style={{ padding: "10px" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px" }}>
               Budget Range
             </div>
 
-            <div
-              style={{
-                height: "6px",
-                background: "#d9dde5",
-                borderRadius: "999px",
-                position: "relative",
-                marginBottom: "18px",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  left: "18%",
-                  right: "22%",
-                  top: 0,
-                  bottom: 0,
-                  background: "#0b2a4a",
-                  borderRadius: "999px",
+
+            <div style={{ display: "grid", gap: "10px", marginBottom: "18px" }}>
+              <input
+                type="range"
+                min="200000"
+                max="1000000"
+                step="10000"
+                value={minBudget}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value < maxBudget) setMinBudget(value);
                 }}
               />
-              <div
-                style={{
-                  position: "absolute",
-                  left: "18%",
-                  top: "50%",
-                  transform: "translate(-50%, -50%)",
-                  width: "20px",
-                  height: "20px",
-                  background: "#0b2a4a",
-                  borderRadius: "50%",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  right: "22%",
-                  top: "50%",
-                  transform: "translate(50%, -50%)",
-                  width: "20px",
-                  height: "20px",
-                  background: "#0b2a4a",
-                  borderRadius: "50%",
+
+              <input
+                type="range"
+                min="200000"
+                max="1000000"
+                step="10000"
+                value={maxBudget}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value > minBudget) setMaxBudget(value);
                 }}
               />
             </div>
@@ -405,9 +382,13 @@ export default function App() {
                 padding: "0 2px",
               }}
             >
-              <span>€500k</span>
-              <span>€750k</span>
+              <span>€{(minBudget / 1000).toFixed(0)}k</span>
+              <span>€{(maxBudget / 1000).toFixed(0)}k</span>
             </div>
+
+
+
+
 
             <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px" }}>
               Area Suitability
@@ -431,18 +412,20 @@ export default function App() {
             <button
               style={{
                 width: "100%",
-                background: "#0b2a4a",
-                color: "white",
+                background: "#cbd5e1",
+                color: "#475569",
                 border: "none",
                 borderRadius: "10px",
                 padding: "9px 12px",
                 fontSize: "13px",
                 fontWeight: 700,
-                cursor: "pointer",
+                cursor: "not-allowed",
               }}
+              disabled
             >
-              Apply Filters
+              Filters update automatically
             </button>
+
           </div>
         </div>
 
@@ -561,6 +544,8 @@ export default function App() {
         </div>
       </div>  
 
+
+
       <div
         style={{
           position: "absolute",
@@ -577,12 +562,11 @@ export default function App() {
       >
 
        <b>Median Price (€)</b><br/>
-        <div><span style={{ background:"#7f1d1d", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> 650k+</div>
-        <div><span style={{ background:"#dc2626", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> 550k+</div>
-        <div><span style={{ background:"#f97316", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> 450k+</div>
-        <div><span style={{ background:"#fde047", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> 350k+</div>
-        <div><span style={{ background:"#22c55e", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> Under 350k</div>
+        <div><span style={{ background:"#7f1d1d", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> Not Suitable for requirements</div>
+        <div><span style={{ background:"#f97316", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> Close Match</div>
+        <div><span style={{ background:"#22c55e", width:15, height:15, display:"inline-block", marginRight:8, verticalAlign:"middle" }}></span> Best Match</div>
       </div>
+
     </div>
   );
 }
