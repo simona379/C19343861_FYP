@@ -31,8 +31,24 @@ function FitToFilteredData() {
   return null;
 }
 
-// App()
+/* 
+-----------------------------------------------------------------------------
+App() 
+-----------------------------------------------------------------------------
+*/
+
 export default function App() {
+
+  // Budget State for Filters
+  const [minBudget, setMinBudget] = useState(500000);
+  const [maxBudget, setMaxBudget] = useState(750000);
+  const [activeFilters, setActiveFilters] = useState({
+    budget: true,
+    schools: false,
+    parks: false,
+    transport: false,
+  });
+
   const [geoData, setGeoData] = useState(null);
   const [stats, setStats] = useState({});
   //const mapRef = useRef(null);
@@ -80,40 +96,80 @@ export default function App() {
       });
   }, []);
 
-  /* Colour scale
-  const getColor = (price) => {
-    if (!price) return "#d3d3d3";
-    if (price > 700000) return "#800026";
-    if (price > 600000) return "#BD0026";
-    if (price > 500000) return "#E31A1C";
-    if (price > 400000) return "#fc932a";
-    if (price > 300000) return "#ddfd3c";
-    if (price > 200000) return "#b4fe4c";
-    return "#54f056";
+// -------------------------------------------------------------------------
+  // Classification Function
+  function classifyArea(area, filters) {
+
+      if (!area) return { status: "no-data", score: 0 };
+
+      let score = 0;
+      let checks = 0;
+
+      if (filters.budget) {
+        checks += 1;
+
+        const price = area.median_price;
+        const min = minBudget;
+        const max = maxBudget;
+
+        if (price >= min && price <= max) {
+          score += 1;
+        } else {
+
+            const tolerance = 50000;
+            if (
+              (price >= min - tolerance && price < min) ||
+              (price > max && price <= max + tolerance)
+            ) {
+              score += 0.5;
+            }
+        }
+      }
+
+      // future filters go here
+      // if (filters.schools) { ... }
+      // if (filters.parks) { ... }
+      // if (filters.transport) { ... }
+
+      if (checks === 0) return { status: "neutral", score: 0 };
+
+      const ratio = score / checks;
+
+      if (ratio >= 1) return { status: "best-match", score: ratio };
+      if (ratio >= 0.5) return { status: "close-match", score: ratio };
+      return { status: "outside-range", score: ratio };
+
+  }
+
+// -------------------------------------------------------------------------
+
+// Map status to colour
+
+  function getSuitabilityColour(status) {
+
+    if (status === "best-match") return "#22c55e"; // green
+    if (status === "close-match") return "#f97316";   // orange
+    if (status === "outside-range") return "#7f1d1d";   // dark red
+    return "#e5e7eb";      
+
   };
 
-  */
-  const getColor = (price) => {
-    if (!price) return "#e5e7eb";
-
-    if (price > 650000) return "#7f1d1d";   // VERY dark red (strong)
-    if (price > 550000) return "#dc2626";   // red
-    if (price > 450000) return "#f97316";   // PROPER orange
-    if (price > 350000) return "#fde047";   // yellow
-    return "#22c55e";                       // green
-  };
+// style function
 
   const style = (feature) => {
     const key = String(feature.properties.RoutingKey).trim().toUpperCase();
     const area = stats[key];
 
+    const result = classifyArea(area, activeFilters);
+
     return {
       color: "#333",
       weight: 1,
-      fillColor: getColor(area?.median_price),
+      fillColor: getSuitabilityColour(result.status),
       fillOpacity: 0.7,
     };
   };
+  
 
   const onEachFeature = (feature, layer) => {
 
@@ -412,7 +468,7 @@ export default function App() {
 
 
             <div style={{ fontSize: "15px", fontWeight: 700, color: "#1f2d3d" }}>
-              {selectedKey ? `Area ${selectedKey}` : "Click an area"}
+              Selected Area
             </div>
             <div
               style={{
