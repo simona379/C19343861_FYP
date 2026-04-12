@@ -17,7 +17,6 @@ SECRET_KEY = 'django-insecure-#bauwygtp98k3f0g*aq0n(j-6sx08xd@0d-3r2a-e5+h$j)z82
 DEBUG = False
 
 ALLOWED_HOSTS = [
-    "*",
     "myhousingmap.uk",
     "www.myhousingmap.uk",
     "178.62.25.85",
@@ -27,9 +26,12 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "http://178.62.25.85",
-    # add https later if  a proxy used in front
     "http://178.62.25.85:5173",
     "http://178.62.25.85:8000",
+    "http://myhousingmap.uk",
+    "http://www.myhousingmap.uk",
+    "https://myhousingmap.uk",
+    "https://www.myhousingmap.uk",
 ]
 
 # Application definition
@@ -69,6 +71,10 @@ MIDDLEWARE = [
 CORS_ALLOWED_ORIGINS = [
     "http://178.62.25.85:5173",
     "http://localhost:5173",
+    "http://myhousingmap.uk",
+    "http://www.myhousingmap.uk",
+    "https://myhousingmap.uk",
+    "https://www.myhousingmap.uk",
 ]
 
 ROOT_URLCONF = 'backend.urls'

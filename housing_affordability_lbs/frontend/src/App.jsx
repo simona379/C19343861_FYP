@@ -54,6 +54,7 @@ export default function App() {
     budget: true,
     schools: false,
     parks: false,
+    universities: false,
     transport: false,
   });
 
