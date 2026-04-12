@@ -38,7 +38,7 @@ def routing_key_list(request):
     if year:
         queryset = queryset.filter(year=year)
 
-    # Python lookup table for amenities keyed by routing key
+    # Python lookup dictionary for amenities(value) keyed by routing key(key)
     amenities_lookup = {
         row.routingkey: {
             "park_count": row.park_count or 0,
@@ -51,9 +51,11 @@ def routing_key_list(request):
 
     # Serialize housing rows then merge amenity values into each row
     merged_rows = []
-    for row in queryset:
-        data = RoutingKeyDublinYearStatSerializer(row).data
 
+    for row in queryset:
+        #serialize housing row 1st - convert output to dict before updating
+        data = dict(RoutingKeyDublinYearStatSerializer(row).data)
+        # find matching amenities counts by routing key
         amenities = amenities_lookup.get(
             row.routing_key,
             {
@@ -63,7 +65,7 @@ def routing_key_list(request):
                 "rail_tram_count": 0,
             },
         )
-
+        # merge value and key into 1 response object
         data.update(amenities)
         merged_rows.append(data)
 
