@@ -86,5 +86,26 @@ class RoutingKeyDublinYearStat(models.Model):
         unique_together = (("year", "routing_key"),)
 
     def __str__(self):
+        
         return f"{self.routing_key} ({self.year})"
+    
+class RoutingKeyAmenities(models.Model):
+    """
+    Precomputed amenity counts per routing key.
+    This table is created and populated directly in PostGIS.
+    Django only reads from it.
+    """
+    routingkey = models.CharField(max_length=80, primary_key=True)
+
+    park_count = models.BigIntegerField(null=True, blank=True)
+    school_count = models.IntegerField(null=True, blank=True)
+    university_count = models.IntegerField(null=True, blank=True)
+    rail_tram_count = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        managed = False  # Django dont touch this table
+        db_table = "routing_key_amenities"
+
+    def __str__(self):
+        return self.routingkey
 

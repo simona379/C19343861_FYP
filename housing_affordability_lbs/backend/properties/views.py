@@ -15,9 +15,64 @@ import requests
 from django.conf import settings
 from math import cos, radians
 
-from .models import Property
-from .serializers import PropertySerializer
+from .models import Property, RoutingKeyDublinYearStat, RoutingKeyAmenities
+from .serializers import PropertySerializer, RoutingKeyDublinYearStatSerializer
 
+@api_view(["GET"])
+def routing_key_list(request):
+    """
+    Return routing key housing data merged with amenity counts
+
+    Query params:
+    - year (optional but expected in frontend, e.g. ?year=2025)
+
+    - Housing stats come from RoutingKeyDublinYearStat
+    - Amenity counts come from RoutingKeyAmenities
+    - Missing amenity values are returned as 0 for display
+    """
+    year = request.GET.get("year")
+
+    # housing queryset
+    queryset = RoutingKeyDublinYearStat.objects.all().order_by("-transactions")
+
+    if year:
+        queryset = queryset.filter(year=year)
+
+    # Python lookup table for amenities keyed by routing key
+    amenities_lookup = {
+        row.routingkey: {
+            "park_count": row.park_count or 0,
+            "school_count": row.school_count or 0,
+            "university_count": row.university_count or 0,
+            "rail_tram_count": row.rail_tram_count or 0,
+        }
+        for row in RoutingKeyAmenities.objects.all()
+    }
+
+    # Serialize housing rows then merge amenity values into each row
+    merged_rows = []
+    for row in queryset:
+        data = RoutingKeyDublinYearStatSerializer(row).data
+
+        amenities = amenities_lookup.get(
+            row.routing_key,
+            {
+                "park_count": 0,
+                "school_count": 0,
+                "university_count": 0,
+                "rail_tram_count": 0,
+            },
+        )
+
+        data.update(amenities)
+        merged_rows.append(data)
+
+    return Response(merged_rows)
+
+
+
+
+# legacy code from earlier adaptation
 @api_view(["GET"])
 def properties_nearby(request):
     """

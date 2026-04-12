@@ -37,8 +37,27 @@ class PropertySerializer(serializers.ModelSerializer):
         return round(dist.m / 1000.0, 3)
     
 
-# Serializer for RK API point
+# Serializer for merged Routing key housing + amenity data, API point
 class RoutingKeyDublinYearStatSerializer(serializers.ModelSerializer):
+    """
+    These fields dont exist on RoutinKeyDublinYearStat model
+    Amenity values will be injected in the view before response is returned
+    """
+    park_count = serializers.IntegerField(read_only=True)
+    school_count = serializers.IntegerField(read_only=True)
+    university_count = serializers.IntegerField(read_only=True)
+    rail_tram_count = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = RoutingKeyDublinYearStat
-        fields = ["year", "routing_key", "transactions", "median_price", "yoy_percent"]
+        fields = [
+            "year", 
+            "routing_key", 
+            "transactions",
+            "median_price", 
+            "yoy_percent",
+            "park_count",
+            "school_count",
+            "university_count",
+            "rail_tram_count",
+        ]
