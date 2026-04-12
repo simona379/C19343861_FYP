@@ -69,6 +69,9 @@ def routing_key_list(request):
         data.update(amenities)
         merged_rows.append(data)
 
+        print("DEBUG_MERGED_FIRST_ROW", merged_rows[0] if merged_rows else "NO_ROWS")
+        print("DEBUG_AMENITIES_LOOKUP_D15", amenities_lookup.get("D15"))
+
     return Response(merged_rows)
 
 
