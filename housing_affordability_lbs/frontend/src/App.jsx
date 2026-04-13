@@ -474,7 +474,7 @@ export default function App() {
   function getFeatureByKey(key) {
     if (!geoData || !geoData.features || !key) return null;
 
-    return geoData.feature.find(
+    return geoData.features.find(
       (feature) =>
         String(feature.properties.RoutingKey).trim().toUpperCase() === 
         String(key).trim().toUpperCase()
