@@ -306,7 +306,7 @@ export default function App() {
 
       try {
         const layer = L.geoJSON(feature);
-        const bound = layer.getBounds();
+        const bounds = layer.getBounds();
 
         if (bounds && bounds.isValid()) {
           map.fitBounds(bounds, {padding: [50, 50] });
