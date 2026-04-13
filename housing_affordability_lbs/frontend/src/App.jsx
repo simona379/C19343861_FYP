@@ -109,20 +109,6 @@ export default function App() {
     });
   }, []);
 
-  // Ranked area scoring system
-  const rankedAreas = Object.entries(stats)
-    .map(([key, area]) => {
-      const result = classifyArea(area, activeFilters);
-      return {
-        key,
-        area,
-        status: result.status,
-        score: result.score,
-      };
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
-
   // fetch trend data when selected area changes
   useEffect(() => {
     if (!selectedKey) {
@@ -166,6 +152,7 @@ export default function App() {
     };
   }
 
+  // Thresholds 
   const parkThresholds = getThresholds(
     Object.values(stats).map((area) => area.park_count ?? 0)
   );
@@ -182,7 +169,7 @@ export default function App() {
     Object.values(stats).map((area) => area.rail_tram_count ?? 0)
   );
 
-  // 
+  // scoring helper
   function scoreAmenity(value, thresholds) {
     const numericValue = Number(value ?? 0);
 
@@ -254,6 +241,20 @@ export default function App() {
     return { status: "outside-range", score: ratio };
 
   }
+
+  // Ranked area scoring system
+  const rankedAreas = Object.entries(stats)
+    .map(([key, area]) => {
+      const result = classifyArea(area, activeFilters);
+      return {
+        key,
+        area,
+        status: result.status,
+        score: result.score,
+      };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
 
   // -------------------------------------------------------------------------
 
