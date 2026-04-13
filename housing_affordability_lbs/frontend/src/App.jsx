@@ -472,7 +472,7 @@ export default function App() {
   }
 
   function getFeatureByKey(key) {
-    if (!geoData || !key) return null;
+    if (!geoData || !geoData.features || !key) return null;
 
     return geoData.feature.find(
       (feature) =>
@@ -483,7 +483,10 @@ export default function App() {
 
   function getAreaDescription(key) {
     const feature = getFeatureByKey(key);
-    const descriptor = feature?.properties?.Descriptor;
+
+    if (!feature || !feature.properties) return key;
+
+    const descriptor = feature.properties.Descriptor;
     return descriptor ? toTitleCase(descriptor) : key;
   }
 
