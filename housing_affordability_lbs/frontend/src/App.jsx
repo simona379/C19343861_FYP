@@ -298,18 +298,28 @@ export default function App() {
       if (!geoData || !selectedKey) return;
 
       const feature = geoData.features.find(
-        f => String(f.properties.RoutingKey).trim().toUpperCase() === selectedKey
+        (f) => 
+          String(f.properties.RoutingKey).trim().toUpperCase() === selectedKey
       );
 
-      if (!feature) return;
+      if (!feature || !feature.geometry) return;
 
-      const layer = L.geoJSON(feature);
-      map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+      try {
+        const layer = L.geoJSON(feature);
+        const bound = layer.getBounds();
 
+        if (bounds && bounds.isValid()) {
+          map.fitBounds(bounds, {padding: [50, 50] });
+        } else {
+          map.setView([53.35, -6.26], 10);
+        }
+      } catch (error) {
+        console.error("FlyToSelected failed: ", error);
+      }
     }, [geoData, selectedKey, map]);
 
     return null;
-  };
+  }
 
   // onEachFeature function
 
