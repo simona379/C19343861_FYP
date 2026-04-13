@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-// import L from "leaflet";
+import L from "leaflet";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import {
@@ -130,6 +130,8 @@ export default function App() {
           setTrendData([]);
         });
     }, [selectedKey]);
+
+  
 
   // -------------------------------------------------------------------------
   // Relative threshold helpers for amenity scoring
@@ -279,11 +281,34 @@ export default function App() {
     const isSelected = key === selectedKey;
 
     return {
-      color: isSelected ? "#111827" : "#333",
-      weight: isSelected ? 4 : 1,
+      color: isSelected ? "#000" : "#333",
+      weight: isSelected ? 5 : 1,
       fillColor: getSuitabilityColour(result.status),
-      fillOpacity: isSelected ? 0.95 : 0.7,
+      fillOpacity: isSelected ? 1 : 0.65,
+      dashArray: isSelected ? "0" : null,
+      opacity: isSelected ? 1 : 0.8,
     };
+  };
+
+    // center map on selection
+  function FlyToSelected({ geoData, selectedKey }) {
+    const map = useMap();
+
+    useEffect(() => {
+      if (!geoData || !selectedKey) return;
+
+      const feature = geoData.features.find(
+        f => String(f.properties.RoutingKey).trim().toUpperCase() === selectedKey
+      );
+
+      if (!feature) return;
+
+      const layer = L.geoJSON(feature);
+      map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+
+    }, [geoData, selectedKey, map]);
+
+    return null;
   };
 
   // onEachFeature function
@@ -304,11 +329,8 @@ export default function App() {
       },
 
       mouseout: (e) => {
-        e.target.setStyle({
-          weight: 1,
-          color: "#333",
-          fillOpacity: 0.7,
-        });
+        const resetStyle = style(feature);
+        e.target.setStyle(resetStyle);
       },
 
       click: () => {
@@ -319,15 +341,14 @@ export default function App() {
 
     });
 
+    const summary = getAreaSummary(area, activeFilters);
+    const result = classifyArea(area, activeFilters);
+
     layer.bindPopup(`
       <b>${key}</b><br/>
-      Median price: €${area?.median_price?.toLocaleString() || "No data"}<br/>
-      Sales: ${area?.transactions || "0"}<br/>
-      YoY change: ${area?.yoy_percent ?? "No data"}%<br/>
-      Parks: ${area?.park_count ?? 0}<br/>
-      Schools: ${area?.school_count ?? 0}<br/>
-      Higher education: ${area?.university_count ?? 0}<br/>
-      DART / Luas access: ${area?.rail_tram_count ?? 0}
+      ${summary.join("<br/>")}
+      <br/><br/>
+      <b>Score: ${(result.score * 100).toFixed(0)}%</b>
     `);
   };
 
@@ -370,6 +391,61 @@ export default function App() {
         },
       },
     },
+  };
+
+  // Summary Explanation Function
+  function getAreaSummary(area, filters) {
+    if (!area) return [];
+
+    const summary = [];
+
+    // Budget
+    if (filters.budget) {
+      const price = Number(area.median_price ?? 0);
+      if (price >= minBudget && price <= maxBudget) {
+        summary.push("✔ Within budget");
+      } else {
+        summary.push("✖ Outside budget");
+      }
+    }
+
+    // Schools
+    if (filters.schools) {
+      if ((area.school_count ?? 0) >= schoolThresholds.strong) {
+        summary.push("✔ Strong school access");
+      } else {
+        summary.push("✖ Limited school access");
+      }
+    }
+
+    // Parks 
+    if (filters.parks) {
+      if ((area.park_count ?? 0) >= parkThresholds.strong) {
+        summary.push("✔ Good park access");
+      } else {
+        summary.push("✖ Limited parks");
+      }
+    }
+
+    // Higher education
+    if (filters.universities) {
+      if ((area.university_count ?? 0) >= universityThresholds.strong) {
+        summary.push("✔ Strong higher education access");
+      } else {
+        summary.push("✖ Limited higher education access");
+      }
+    }
+
+    // Transport
+    if (filters.transport) {
+      if ((area.rail_tram_count ?? 0) >= railTramThresholds.strong) {
+        summary.push("✔ Strong transport links");
+      } else {
+        summary.push("✖ Limited transport");
+      }
+    }
+
+    return summary;
   };
 
 
@@ -440,6 +516,10 @@ export default function App() {
         />
 
         {filteredGeoData && <FitToFilteredData />}
+
+        {geoData && selectedKey && (
+          <FlyToSelected geoData={geoData} selectedKey={selectedKey} />
+        )}
 
         {filteredGeoData && (
           <GeoJSON
@@ -562,6 +642,18 @@ export default function App() {
                     selectedArea.median_price <= maxBudget
                     ? "✔ Within your budget"
                     : "✖ Outside your budget")}
+              </div>
+
+              <div style={{ marginTop: "12px", fontSize: "14px" }}>
+                Score: {(classifyArea(selectedArea, activeFilters).score * 100).toFixed(0)}%
+              </div>
+
+              <div style={{ fontSize: "13px", color: "#475569" }}>
+                Based on:
+                {activeFilters.schools && " Schools"}
+                {activeFilters.parks && " Parks"}
+                {activeFilters.universities && " Higher education"}
+                {activeFilters.transport && " DART / Luas access"}
               </div>
 
               <div style={{ display: "grid", gap: "18px", marginBottom: "28px" }}>
