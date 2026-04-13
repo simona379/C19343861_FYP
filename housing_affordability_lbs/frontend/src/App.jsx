@@ -358,7 +358,7 @@ export default function App() {
     const result = classifyArea(area, activeFilters);
 
     layer.bindPopup(`
-      <b>${key} - ${getAreaDescriptor(key)}</b><br/>
+      <b>${key} - ${getAreaDescription(key)}</b><br/>
       ${summary.join("<br/>")}
       <br/><br/>
       <b>Score: ${(result.score * 100).toFixed(0)}%</b>
@@ -672,7 +672,7 @@ export default function App() {
               </div>
 
               <div style={{ fontSize: "28px", fontWeight: 800, marginBottom: "6px" }}>
-                {selectedKey ? getAreaDescriptor(selectedKey) : "—"}
+                {selectedKey ? getAreaDescription(selectedKey) : "—"}
               </div>
 
               <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "18px" }}>
@@ -801,7 +801,7 @@ export default function App() {
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                       <strong>
-                        {index + 1}. {item.key} - {getAreaDescriptor(item.key)}
+                        {index + 1}. {item.key} - {getAreaDescription(item.key)}
                       </strong>
                       <span
                         style={{
