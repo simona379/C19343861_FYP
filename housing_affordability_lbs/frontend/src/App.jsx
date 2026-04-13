@@ -146,6 +146,51 @@ export default function App() {
     }, [selectedKey]);
 
   // -------------------------------------------------------------------------
+  // Relative threshold helpers for amenity scoring
+  function getThresholds(values) {
+    const cleaned = values
+      .map((v) => Number(v))
+      .filter((v) => !Number.isNaN(v))
+      .sort((a, b) => a - b);
+
+    if (cleaned.length === 0) {
+      return { close: 0, strong: 0 };
+    }
+
+    const closeIndex = Math.floor(cleaned.length * 0.5); // mediumish
+    const strongIndex = Math.floor(cleaned.length * 0.75); // upper quartile(ish)
+
+    return {
+      close: cleaned[Math.min(closeIndex, cleaned.length -1)],
+      strong: cleaned[Math.min(strongIndex, cleaned.length -1)],
+    };
+  }
+
+  const parkThresholds = getThresholds(
+    Object.values(stats).map((area) => area.park_count ?? 0)
+  );
+
+  const schoolThresholds = getThresholds(
+    Object.values(stats).map((area) => area.school_count ?? 0)
+  );
+
+  const universityThresholds = getThresholds(
+    Object.values(stats).map((area) => area.university_count ?? 0)
+  );
+
+  const railTramThresholds = getThresholds(
+    Object.values(stats).map((area) => area.rail_tram_count ?? 0)
+  );
+
+  // 
+  function scoreAmenity(value, thresholds) {
+    const numericValue = Number(value ?? 0);
+
+    if (numericValue >= thresholds.strong) return 1;
+    if (numericValue >= thresholds.close) return 0.5;
+    return 0;
+  }
+
   // Classification Function
   function classifyArea(area, filters) {
 
@@ -154,38 +199,58 @@ export default function App() {
     let score = 0;
     let checks = 0;
 
+    // Budget scoring
     if (filters.budget) {
       checks += 1;
 
-      const price = area.median_price;
+      const price = Number(area.median_price ?? 0);
       const min = minBudget;
       const max = maxBudget;
+      const tolerance = 50000;
 
       if (price >= min && price <= max) {
         score += 1;
-      } else {
-
-        const tolerance = 50000;
-        if (
-          (price >= min - tolerance && price < min) ||
-          (price > max && price <= max + tolerance)
-        ) {
-          score += 0.5;
-        }
+      } else if (
+        (price >= min - tolerance && price < min) ||
+        (price > max && price <= max + tolerance)
+      ) {
+        score += 0.5;
       }
     }
 
-    // future filters go here
-    // if (filters.schools) { ... }
-    // if (filters.parks) { ... }
-    // if (filters.transport) { ... }
+    // filters go here
+    // parks
+    if (filters.parks) {
+      checks += 1;
+      score += scoreAmenity(area.park_count, parkThresholds);
+    }
+    
+    // schools
+    if (filters.schools) {
+      checks += 1;
+      score += scoreAmenity(area.school_count, schoolThresholds);
+    }
 
-    if (checks === 0) return { status: "neutral", score: 0 };
+    // universities
+    if (filters.universities) {
+      checks += 1;
+      score += scoreAmenity(area.university_count, universityThresholds);
+    }
+
+    // DART/LUAs access
+    if (filters.transport) {
+      checks += 1;
+      score += scoreAmenity(area.rail_tram_count, railTramThresholds);
+    }
+
+    if (checks === 0) {
+      return { status: "neutral", score: 0 };
+    }
 
     const ratio = score / checks;
 
-    if (ratio >= 1) return { status: "best-match", score: ratio };
-    if (ratio >= 0.5) return { status: "close-match", score: ratio };
+    if (ratio >= 0.8) return { status: "best-match", score: ratio };
+    if (ratio >= 0.4) return { status: "close-match", score: ratio };
     return { status: "outside-range", score: ratio };
 
   }
@@ -256,7 +321,11 @@ export default function App() {
       <b>${key}</b><br/>
       Median price: €${area?.median_price?.toLocaleString() || "No data"}<br/>
       Sales: ${area?.transactions || "0"}<br/>
-      YoY change: ${area?.yoy_percent ?? "No data"}%
+      YoY change: ${area?.yoy_percent ?? "No data"}%<br/>
+      Parks: ${area?.park_count ?? 0}<br/>
+      Schools: ${area?.school_count ?? 0}<br/>
+      Higher education: ${area?.university_count ?? 0}<br/>
+      DART / Luas access: ${area?.rail_tram_count ?? 0}
     `);
   };
 
@@ -524,6 +593,27 @@ export default function App() {
                       : "—"}
                   </strong>
                 </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Parks</span>
+                  <strong>{selectedArea?.park_count ?? 0}</strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Schools</span>
+                  <strong>{selectedArea?.school_count ?? 0}</strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Higher Education</span>
+                  <strong>{selectedArea?.university_count ?? 0}</strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>DART / Luas Access</span>
+                  <strong>{selectedArea?.rail_tram_count ?? 0}</strong>
+                </div>
+
               </div>
 
               <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "14px" }}>
@@ -703,6 +793,56 @@ export default function App() {
             >
               <span>€{(minBudget / 1000).toFixed(0)}k</span>
               <span>€{(maxBudget / 1000).toFixed(0)}k</span>
+            </div>
+
+            <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "12px" }}>
+              Amenity Filters
+            </div>
+
+            <div style={{ display: "grid", gap: "10px", marginBottom: "20px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+                <input
+                  type="checkbox"
+                  checked={activeFilters.schools}
+                  onChange={(e) =>
+                    setActiveFilters((prev) => ({ ...prev, schools: e.target.checked }))
+                  }
+                />
+                Schools
+              </label>
+
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+                <input
+                  type="checkbox"
+                  checked={activeFilters.parks}
+                  onChange={(e) =>
+                    setActiveFilters((prev) => ({ ...prev, parks: e.target.checked }))
+                  }
+                />
+                Parks
+              </label>
+
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+                <input
+                  type="checkbox"
+                  checked={activeFilters.universities}
+                  onChange={(e) =>
+                    setActiveFilters((prev) => ({ ...prev, universities: e.target.checked }))
+                  }
+                />
+                Higher education
+              </label>
+
+              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+                <input
+                  type="checkbox"
+                  checked={activeFilters.transport}
+                  onChange={(e) =>
+                    setActiveFilters((prev) => ({ ...prev, transport: e.target.checked }))
+                  }
+                />
+                DART / Luas access
+              </label>
             </div>
 
             <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px" }}>
