@@ -309,7 +309,10 @@ export default function App() {
         const bounds = layer.getBounds();
 
         if (bounds && bounds.isValid()) {
-          map.fitBounds(bounds, {padding: [50, 50] });
+          map.fitBounds(bounds, {
+            padding: [180, 180],
+            maxZoom: 10,
+          });
         } else {
           map.setView([53.35, -6.26], 10);
         }
@@ -355,7 +358,7 @@ export default function App() {
     const result = classifyArea(area, activeFilters);
 
     layer.bindPopup(`
-      <b>${key}</b><br/>
+      <b>${key} - ${getAreaDescriptor(key)}</b><br/>
       ${summary.join("<br/>")}
       <br/><br/>
       <b>Score: ${(result.score * 100).toFixed(0)}%</b>
@@ -457,6 +460,32 @@ export default function App() {
 
     return summary;
   };
+
+  //NAmes for routing keys
+  function toTitleCase(text) {
+    if (!text) return "";
+    return text
+      .toLowerCase()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+
+  function getFeatureByKey(key) {
+    if (!geoData || !key) return null;
+
+    return geoData.feature.find(
+      (feature) =>
+        String(feature.properties.RoutingKey).trim().toUpperCase() === 
+        String(key).trim().toUpperCase()
+    );
+  }
+
+  function getAreaDescription(key) {
+    const feature = getFeatureByKey(key);
+    const descriptor = feature?.properties?.Descriptor;
+    return descriptor ? toTitleCase(descriptor) : key;
+  }
 
 
   return (
@@ -642,8 +671,12 @@ export default function App() {
                 {selectedKey || "—"}
               </div>
 
-              <div style={{ fontSize: "28px", fontWeight: 800, marginBottom: "18px" }}>
-                {selectedKey || "—"}
+              <div style={{ fontSize: "28px", fontWeight: 800, marginBottom: "6px" }}>
+                {selectedKey ? getAreaDescriptor(selectedKey) : "—"}
+              </div>
+
+              <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "18px" }}>
+                Routing key area
               </div>
 
               <div style={{ marginTop: "10px", marginBottom: "18px", fontSize: "14px", color: "#475569" }}>
@@ -768,7 +801,7 @@ export default function App() {
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                       <strong>
-                        {index + 1}. {item.key}
+                        {index + 1}. {item.key} - {getAreaDescriptor(item.key)}
                       </strong>
                       <span
                         style={{
@@ -794,7 +827,7 @@ export default function App() {
                       Median price: €{item.area.median_price.toLocaleString()}
                     </div>
                     <div style={{ fontSize: "14px", color: "#475569" }}>
-                      Transactions: {item.area.transactions}
+                      Score: {(item.score * 100).toFixed(0)}%
                     </div>
                   </div>
                 ))}
