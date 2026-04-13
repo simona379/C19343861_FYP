@@ -274,14 +274,15 @@ export default function App() {
   const style = (feature) => {
     const key = String(feature.properties.RoutingKey).trim().toUpperCase();
     const area = stats[key];
-
     const result = classifyArea(area, activeFilters);
 
+    const isSelected = key === selectedKey;
+
     return {
-      color: "#333",
-      weight: 1,
+      color: isSelected ? "#111827" : "#333",
+      weight: isSelected ? 4 : 1,
       fillColor: getSuitabilityColour(result.status),
-      fillOpacity: 0.7,
+      fillOpacity: isSelected ? 0.95 : 0.7,
     };
   };
 
@@ -442,6 +443,7 @@ export default function App() {
 
         {filteredGeoData && (
           <GeoJSON
+            key={`${selectedKey || "none"}-${minBudget}-${maxBudget}-${JSON.stringify(activeFilters)}`}
             data={filteredGeoData}
             style={style}
             onEachFeature={onEachFeature}
@@ -652,6 +654,7 @@ export default function App() {
                     onClick={() => {
                       setSelectedKey(item.key);
                       setActivePanelTab("selected");
+                      setPanelOpen(true);
                     }}
                     style={{
                       border: "1px solid #e6e6e6",
