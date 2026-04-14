@@ -451,6 +451,7 @@ export default function App() {
   };
 
   //  chart 2 (average amenities per routing key)
+  // helper
   function averageOf(field) {
     const values = Object.values(stats)
       .map((area) => Number(area?.[field] ?? 0))
@@ -459,13 +460,26 @@ export default function App() {
     if (values.length === 0) return 0;
 
     return values.reduce((sum, value) => sum + value, 0) / values.length;
-  }
+  };
+
+  // helper above/below averages indicators 
+  function getComparison(value, average) {
+    if (!average || average === 0) return null;
+
+    const diffPercent = ((value - average) / average) * 100;
+
+    return {
+      percent: Math.abs(diffPercent).toFixed(0),
+      direction: diffPercent >= 0 ? "above" : "below",
+    };
+  };
 
   const averageSchools = averageOf("school_count");
   const averageParks = averageOf("park_count");
   const averageUniversities = averageOf("university_count");
   const averageTransport = averageOf("rail_tram_count");
 
+  // compute averages
   const amenityComparisonData = {
     labels: ["Schools", "Parks", "Higher Education", "DART / Luas"],
     datasets: [
@@ -515,6 +529,27 @@ export default function App() {
       },
     },
   };
+
+  // compute comparisons
+  const schoolComparison = getComparison(
+    selectedArea?.school_count ?? 0,
+    averageSchools
+  );
+
+  const parkComparison = getComparison(
+    selectedArea?.park_count ?? 0,
+    averageParks
+  );
+
+  const universityComparison = getComparison(
+    selectedArea?.university_count ?? 0,
+    averageUniversities
+  );
+
+  const transportComparison = getComparison(
+    selectedArea?.rail_tram_count ?? 0,
+    averageTransport
+  );
 
 
 
@@ -603,6 +638,25 @@ export default function App() {
     const descriptor = feature.properties.Descriptor;
     return descriptor ? toTitleCase(descriptor) : key;
   }
+
+  // Comparison Amenities Average with other areas function for UI
+  function ComparisonRow({ label, comparison }) {
+    if (!comparison) return null;
+
+    const isAbove = comparison.direction === "above";
+
+    return (
+      <div
+        style={{
+          color: isAbove ? "#16a34a" : "#475569", // green or neutral
+          fontWeight: 600,
+        }}
+      >
+        {label}: {isAbove ? "+" : "−"}
+        {comparison.percent}% vs average
+      </div>
+    );
+  };
 
   // 
   function getStatusLabel(status) {
@@ -908,6 +962,28 @@ export default function App() {
                 {getAreaSummary(selectedArea, activeFilters).map((line, idx) => (
                   <div key={idx}>{line}</div>
                 ))}
+              </div>
+
+              <div style={{ fontSize: "13px", color: "#475569", marginBottom: "14px" }}>
+                Compared to average:
+              </div>
+
+              <div style={{ display: "grid", gap: "6px", fontSize: "14px", marginBottom: "16px" }}>
+                {activeFilters.schools && (
+                  <ComparisonRow label="Schools" comparison={schoolComparison} />
+                )}
+
+                {activeFilters.parks && (
+                  <ComparisonRow label="Parks" comparison={parkComparison} />
+                )}
+
+                {activeFilters.universities && (
+                  <ComparisonRow label="Higher education" comparison={universityComparison} />
+                )}
+
+                {activeFilters.transport && (
+                  <ComparisonRow label="Transport" comparison={transportComparison} />
+                )}
               </div>
 
               <div style={{ fontSize: "13px", color: "#475569", marginTop: "4px" }}>
