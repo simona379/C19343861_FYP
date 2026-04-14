@@ -310,7 +310,7 @@ export default function App() {
 
         if (bounds && bounds.isValid()) {
           map.fitBounds(bounds, {
-            padding: [160, 160],
+            padding: [170, 170],
             maxZoom: 12,
             duration: 1.2,
           });
@@ -850,7 +850,7 @@ export default function App() {
                       Score: {(item.score * 100).toFixed(0)}%
                     </div>
                   </div>
-                  
+
                 ))}
               </div>
             </>
