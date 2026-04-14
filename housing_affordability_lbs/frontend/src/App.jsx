@@ -215,57 +215,69 @@ export default function App() {
 
     if (!area) return { status: "no-data", score: 0 };
 
-    const budgetScore = filters.budget ? getBudgetScore(area) : 0;
+    const criteria = [];
 
-    const amenityContributions = [];
-    let totalAmenityWeight = 0;
+    // budget is the primary constraint when enabled
+    if (filters.budget) {
+      const budgetScore = getBudgetScore(area);
+      // gatekeeper criterion weighted as always more than most important amenity
+      const budgetWeight = 4;
+      criteria.push({ score: budgetScore, weight: budgetWeight });
+    }
 
     // filters go here
-    // parks
-    if (filters.parks) {
-      const weight = amenityWeights.parks;
-      const amenityScore = scoreAmenity(area.park_count, parkThresholds);
-      amenityContributions.push(amenityScore * weight);
-      totalAmenityWeight += weight;
-    }
-    
     // schools
     if (filters.schools) {
-      const weight = amenityWeights.schools;
-      const amenityScore = scoreAmenity(area.school_count, schoolThresholds);
-      amenityContributions.push(amenityScore * weight);
-      totalAmenityWeight += weight;
+      criteria.push({
+        score: scoreAmenity(area.school_count, schoolThresholds),
+        weight: amenityWeights.schools,
+      });
+    }
+
+    // parks
+    if (filters.parks) {
+      criteria.push({
+        score: scoreAmenity(area.park_count, parkThresholds),
+        weight: amenityWeights.parks,
+      });
     }
 
     // universities
     if (filters.universities) {
-      const weight = amenityWeights.universities;
-      const amenityScore = scoreAmenity(area.university_count, universityThresholds);
-      amenityContributions.push(amenityScore * weight);
-      totalAmenityWeight += weight;
+      criteria.push({
+        score: scoreAmenity(area.university_count, universityThresholds),
+        weight: amenityWeights.universities,
+      });
     }
 
 
     // DART/LUAs access
     if (filters.transport) {
-      const weight = amenityWeights.transport;
-      const amenityScore = scoreAmenity(area.rail_tram_count, railTramThresholds);
-      amenityContributions.push(amenityScore * weight);
-      totalAmenityWeight += weight;
+      criteria.push({
+        score: scoreAmenity(area.rail_tram_count, railTramThresholds),
+        weight: amenityWeights.transport,
+      });
     }
 
-    let finalScore = 0;
-
-    // if no amenity filters are selected, score falls back to budget only
-    if (totalAmenityWeight === 0) {
-      finalScore = budgetScore;
-    } else {
-      const weightedAmenityScore = 
-        amenityContributions.reduce((sum, value) => sum + value, 0) / totalAmenityWeight;
-
-      // budget + weighted amenity score combined equally
-      finalScore = (budgetScore + weightedAmenityScore) / 2; 
+    // no filters active => nothing to score against
+    if (criteria.length === 0) {
+      return { status: "neutral", score: 0 };
     }
+
+    // for each active criterion: score x importance, then add together
+    const weightedSum = criteria.reduce(
+      (sum, item) => sum + item.score * item.weight,
+      0
+    );
+
+    // adding up all values
+    const totalWeight = criteria.reduce(
+      (sum, item) => sum + item.weight,
+      0
+    );
+
+    // weighted average (score 0->1)
+    const finalScore = weightedSum / totalWeight;
 
     if (finalScore >= 0.8) return { status: "best-match", score: finalScore };
     if (finalScore >= 0.4) return { status: "close-match", score: finalScore };
@@ -339,8 +351,8 @@ export default function App() {
 
         if (bounds && bounds.isValid()) {
           map.flyToBounds(bounds, {
-            padding: [160, 160],
-            maxZoom: 12,
+            padding: [180, 180],
+            maxZoom: 10,
           });
         } else {
           map.setView([53.35, -6.26], 10);
