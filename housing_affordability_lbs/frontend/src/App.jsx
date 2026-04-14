@@ -485,7 +485,7 @@ export default function App() {
         data: [
           Number(averageSchools.toFixed(1)),
           Number(averageParks.toFixed(1)),
-          Number(averageHigherEducation.toFixed(1)),
+          Number(averageUniversities.toFixed(1)),
           Number(averageTransport.toFixed(1)),
         ],
         backgroundColor: "rgba(148, 163, 184, 0.85)",
