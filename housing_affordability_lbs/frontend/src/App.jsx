@@ -338,7 +338,7 @@ export default function App() {
         const bounds = layer.getBounds();
 
         if (bounds && bounds.isValid()) {
-          map.fitToBounds(bounds, {
+          map.flyToBounds(bounds, {
             padding: [160, 160],
             maxZoom: 12,
           });
