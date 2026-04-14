@@ -310,8 +310,9 @@ export default function App() {
 
         if (bounds && bounds.isValid()) {
           map.fitBounds(bounds, {
-            padding: [180, 180],
-            maxZoom: 10,
+            padding: [160, 160],
+            maxZoom: 12,
+            duration: 1.2,
           });
         } else {
           map.setView([53.35, -6.26], 10);
@@ -802,14 +803,30 @@ export default function App() {
                       background: "white",
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                      <strong>
-                        {index + 1}. {item.key} - {getAreaDescription(item.key)}
-                      </strong>
+                    <div 
+                      style={{ 
+                        display: "flex", 
+                        justifyContent: "space-between", 
+                        alignItems: "flex-start",
+                        marginBottom: "8px",
+                        gap: "12px",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: "18px", lineHeight: 1.2 }}>
+                          {index + 1}. {getAreaDescription(item.key)}
+                        </div>
+                        <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
+                          {item.key}
+                        </div>
+                      </div>
+
+
                       <span
                         style={{
                           fontSize: "13px",
                           fontWeight: 700,
+                          whiteSpace: "nowrap",
                           color:
                             item.status === "best-match"
                               ? "#17a35b"
@@ -833,6 +850,7 @@ export default function App() {
                       Score: {(item.score * 100).toFixed(0)}%
                     </div>
                   </div>
+                  
                 ))}
               </div>
             </>
