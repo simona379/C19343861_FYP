@@ -8,6 +8,7 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Tooltip,
   Legend,
 } from "chart.js";
@@ -18,9 +19,10 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Tooltip,
   Legend,
-  BarElement
+
 );
 
 function FitToFilteredData() {
