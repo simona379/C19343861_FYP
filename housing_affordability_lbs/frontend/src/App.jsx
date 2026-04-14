@@ -305,9 +305,9 @@ export default function App() {
 
   function getSuitabilityColour(status) {
 
-    if (status === "best-match") return "#22c55e"; // green
-    if (status === "close-match") return "#f97316";   // orange
-    if (status === "outside-range") return "#7f1d1d";   // dark red
+    if (status === "best-match") return "#16a34a"; // green
+    if (status === "close-match") return "#f59e0b";   // orange
+    if (status === "outside-range") return "#dc2626";   //  red
     return "#e5e7eb";
 
   };
@@ -322,10 +322,10 @@ export default function App() {
     const isSelected = key === selectedKey;
 
     return {
-      color: isSelected ? "#000" : "#333",
-      weight: isSelected ? 5 : 1,
+      color: isSelected ? "#111827" : "#333",
+      weight: isSelected ? 3 : 1,
       fillColor: getSuitabilityColour(result.status),
-      fillOpacity: isSelected ? 1 : 0.65,
+      fillOpacity: isSelected ? 0.75 : 0.45,
       dashArray: isSelected ? "0" : null,
       opacity: isSelected ? 1 : 0.8,
     };
@@ -560,7 +560,7 @@ export default function App() {
             fontWeight: 600,
           }}
         >
-          Importance (priority)
+          How important is this?
         </div>
 
         <div style={{ display: "flex", gap: "8px" }}>
@@ -591,8 +591,8 @@ export default function App() {
                 }
                 style={{
                   border: isActive ? "2px solid #0b2a4a" : "1px solid #cbd5e1",
-                  background: isActive ? backgrounds[value]: "white",
-                  color: "#1f2d3d",
+                  background: isActive ? "#0b2a4a": "#f8fafc",
+                  color: isActive? "white" : "#475569",
                   borderRadius: "999px",
                   padding: "6px 10px",
                   minWidth: "60px",
@@ -607,13 +607,6 @@ export default function App() {
               </button>
             );
           })}
-        </div>
-        <div style={{
-          fontSize: "11px",
-          color: "#94a3b8",
-          marginTop: "4px"
-        }}>
-          Higher importance = stronger influence on results
         </div>
       </div>
     );
@@ -660,14 +653,14 @@ export default function App() {
 
         <div
           style={{
-            background: "#17a35b",
+            background: "#b38af0",
             padding: "8px 16px",
             borderRadius: "999px",
             fontSize: "14px",
             fontWeight: 600,
           }}
         >
-          Explore map by selecting areas!
+          Select an area to explore insights
         </div>
       </div>
 
@@ -822,10 +815,6 @@ export default function App() {
                 {selectedKey ? getAreaDescription(selectedKey) : "—"}
               </div>
 
-              <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "18px" }}>
-                Routing key area
-              </div>
-
               <div style={{ fontSize: "36px", fontWeight: 800, marginBottom: "4px", color: "#0b2a4a" }}>
                 {(selectedResult.score * 100).toFixed(0)}%
               </div>
@@ -839,7 +828,7 @@ export default function App() {
               </div>
 
               <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "12px" }}>
-                Why this matches
+                Why this area matches your criteria
               </div>
 
               <div style={{ display: "grid", gap: "8px", fontSize: "16px", marginBottom: "20px" }}>
@@ -919,10 +908,10 @@ export default function App() {
                           whiteSpace: "nowrap",
                           color:
                             item.status === "best-match"
-                              ? "#17a35b"
+                              ? "#16a34a"
                               : item.status === "close-match"
-                                ? "#f97316"
-                                : "#7f1d1d",
+                                ? "#f59e0b"
+                                : "#dc2626",
                         }}
                       >
                         {item.status === "best-match"
@@ -1130,6 +1119,15 @@ export default function App() {
             <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "12px" }}>
               Amenity Filters
             </div>
+
+              <div style={{
+                fontSize: "11px",
+                color: "#94a3b8",
+                marginTop: "4px",
+                marginBottom: "12px"
+              }}>
+                Higher importance = stronger influence on results
+              </div>
 
               <div style={{ marginBottom: "12px" }}>
                 <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
