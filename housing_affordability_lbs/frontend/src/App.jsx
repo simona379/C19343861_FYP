@@ -456,7 +456,7 @@ export default function App() {
       .map((area) => Number(area?.[field] ?? 0))
       .filter((value) => !Number.isNaN(value));
 
-    if (values.length === 0) return;
+    if (values.length === 0) return 0;
 
     return values.reduce((sum, value) => sum + value, 0) / values.length;
   }
@@ -483,10 +483,10 @@ export default function App() {
       {
         label: "Average",
         data: [
-          Number(averageSchools.toFixed(1)),
-          Number(averageParks.toFixed(1)),
-          Number(averageUniversities.toFixed(1)),
-          Number(averageTransport.toFixed(1)),
+          Number((averageSchools ?? 0).toFixed(1)),
+          Number((averageParks ?? 0).toFixed(1)),
+          Number((averageUniversities ?? 0).toFixed(1)),
+          Number((averageTransport ?? 0).toFixed(1)),
         ],
         backgroundColor: "rgba(148, 163, 184, 0.85)",
         borderRadius: 6,
