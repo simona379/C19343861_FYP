@@ -309,8 +309,8 @@ export default function App() {
         const bounds = layer.getBounds();
 
         if (bounds && bounds.isValid()) {
-          map.fitBounds(bounds, {
-            padding: [170, 170],
+          map.FlyToBounds(bounds, {
+            padding: [180, 180],
             maxZoom: 12,
             duration: 1.2,
           });
@@ -491,6 +491,16 @@ export default function App() {
     return descriptor ? toTitleCase(descriptor) : key;
   }
 
+  // 
+  function getStatusLabel(status) {
+    if (status === "best-match") return "Best match";
+    if (status === "close-match") return "Close match";
+    if (status === "outside-range") return "Not suitable";
+    return "No data";
+  }
+
+  const selectedResult = classifyArea(selectedArea, activeFilters);
+
 
   return (
     <div
@@ -601,7 +611,7 @@ export default function App() {
           }}
         >
           <div style={{ fontSize: "18px", fontWeight: 700, color: "#1f2d3d" }}>
-            Selected Area
+            Summary
           </div>
 
           <button
@@ -637,7 +647,7 @@ export default function App() {
               color: activePanelTab === "selected" ? "white" : "#1f2d3d",
             }}
           >
-            Selected Area
+            Summary
           </button>
 
           <button
@@ -653,6 +663,21 @@ export default function App() {
             }}
           >
             Rankings
+          </button>
+
+          <button
+            onClick={() => setActivePanelTab("analysis")}
+            style={{
+              border: "none",
+              borderRadius: "10px",
+              padding: "8px 12px",
+              fontWeight: 700,
+              cursor: "pointer",
+              background: activePanelTab === "analysis" ? "#0b2a4a" : "#e5e7eb",
+              color: activePanelTab === "analysis" ? "white" : "#1f2d3d",
+            }}
+          >
+            Analysis
           </button>
         </div>
 
@@ -683,101 +708,41 @@ export default function App() {
                 Routing key area
               </div>
 
-              <div style={{ marginTop: "10px", marginBottom: "18px", fontSize: "14px", color: "#475569" }}>
-                {selectedArea &&
-                  (selectedArea.median_price >= minBudget &&
-                    selectedArea.median_price <= maxBudget
-                    ? "✔ Within your budget"
-                    : "✖ Outside your budget")}
+              <div style={{ fontSize: "36px", fontWeight: 800, marginBottom: "4px", color: "#0b2a4a" }}>
+                {(selectedResult.score * 100).toFixed(0)}%
               </div>
 
-              <div style={{ marginTop: "12px", fontSize: "14px" }}>
-                Score: {(classifyArea(selectedArea, activeFilters).score * 100).toFixed(0)}%
+              <div style={{ fontSize: "14px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
+                {getStatusLabel(selectedResult.status)}
               </div>
 
-              <div style={{ fontSize: "13px", color: "#475569" }}>
-                Based on:
-                {activeFilters.schools && " Schools"}
-                {activeFilters.parks && " Parks"}
-                {activeFilters.universities && " Higher education"}
-                {activeFilters.transport && " DART / Luas access"}
+              <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "18px" }}>
+                Overall suitability score
               </div>
 
-              <div style={{ display: "grid", gap: "18px", marginBottom: "28px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-                  <span>Median Price</span>
-                  <strong>
-                    {selectedArea?.median_price
-                      ? `€${selectedArea.median_price.toLocaleString()}`
-                      : "—"}
-                  </strong>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-                  <span>Transactions</span>
-                  <strong>{selectedArea?.transactions || "—"}</strong>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-                  <span>YoY Change</span>
-                  <strong
-                    style={{
-                      color:
-                        selectedArea?.yoy_percent > 0
-                          ? "#17a35b"
-                          : selectedArea?.yoy_percent < 0
-                            ? "#dc2626"
-                            : "#374151",
-                    }}
-                  >
-                    {selectedArea?.yoy_percent != null
-                      ? `${selectedArea.yoy_percent}%`
-                      : "—"}
-                  </strong>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-                  <span>Parks</span>
-                  <strong>{selectedArea?.park_count ?? 0}</strong>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-                  <span>Schools</span>
-                  <strong>{selectedArea?.school_count ?? 0}</strong>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-                  <span>Higher Education</span>
-                  <strong>{selectedArea?.university_count ?? 0}</strong>
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
-                  <span>DART / Luas Access</span>
-                  <strong>{selectedArea?.rail_tram_count ?? 0}</strong>
-                </div>
-
+              <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "12px" }}>
+                Why this matches
               </div>
 
-              <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "14px" }}>
-                Price Trend
+              <div style={{ display: "grid", gap: "8px", fontSize: "16px", marginBottom: "20px" }}>
+                {getAreaSummary(selectedArea, activeFilters).map((line, idx) => (
+                  <div key={idx}>{line}</div>
+                ))}
               </div>
 
-              <div
-                style={{
-                  height: "260px",
-                  borderTop: "1px solid #e6e6e6",
-                  paddingTop: "14px",
-                }}
-              >
-                {trendData.length > 0 ? (
-                  <Line data={chartData} options={chartOptions} />
-                ) : (
-                  <div style={{ color: "#94a3b8", fontSize: "14px" }}>
-                    No trend data available
-                  </div>
-                )}
+              <div style={{ fontSize: "13px", color: "#475569", marginTop: "4px" }}>
+                Based on{" "}
+                {[
+                  activeFilters.budget && "Budget",
+                  activeFilters.schools && "Schools",
+                  activeFilters.parks && "Parks",
+                  activeFilters.universities && "Higher education",
+                  activeFilters.transport && "DART / Luas access",
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
               </div>
-            </>
+          </>
           )}
 
           {activePanelTab === "rankings" && (
@@ -852,6 +817,88 @@ export default function App() {
                   </div>
 
                 ))}
+              </div>
+            </>
+          )}
+
+          {activePanelTab === "analysis" && (
+            <>
+              <div style={{ fontSize: "24px", fontWeight: 800, marginBottom: "18px" }}>
+                Area Analysis
+              </div>
+
+              <div style={{ display: "grid", gap: "18px", marginBottom: "28px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Median Price</span>
+                  <strong>
+                    {selectedArea?.median_price
+                      ? `€${selectedArea.median_price.toLocaleString()}`
+                      : "—"}
+                  </strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Transactions</span>
+                  <strong>{selectedArea?.transactions || "—"}</strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>YoY Change</span>
+                  <strong
+                    style={{
+                      color:
+                        selectedArea?.yoy_percent > 0
+                          ? "#17a35b"
+                          : selectedArea?.yoy_percent < 0
+                            ? "#dc2626"
+                            : "#374151",
+                    }}
+                  >
+                    {selectedArea?.yoy_percent != null
+                      ? `${selectedArea.yoy_percent}%`
+                      : "—"}
+                  </strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Parks</span>
+                  <strong>{selectedArea?.park_count ?? 0}</strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Schools</span>
+                  <strong>{selectedArea?.school_count ?? 0}</strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>Higher Education</span>
+                  <strong>{selectedArea?.university_count ?? 0}</strong>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                  <span>DART / Luas Access</span>
+                  <strong>{selectedArea?.rail_tram_count ?? 0}</strong>
+                </div>
+              </div>
+
+              <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "14px" }}>
+                Price Trend
+              </div>
+
+              <div
+                style={{
+                  height: "260px",
+                  borderTop: "1px solid #e6e6e6",
+                  paddingTop: "14px",
+                }}
+              >
+                {trendData.length > 0 ? (
+                  <Line data={chartData} options={chartOptions} />
+                ) : (
+                  <div style={{ color: "#94a3b8", fontSize: "14px" }}>
+                    No trend data available
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -1012,15 +1059,15 @@ export default function App() {
             <div style={{ display: "grid", gap: "8px", marginBottom: "16px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                 <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
-                Best match
+                Best match (80-100%)
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                 <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#f97316", display: "inline-block" }} />
-                Close match
+                Close match (40-79%)
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                 <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#7f1d1d", display: "inline-block" }} />
-                Not suitable
+                Not suitable (0-39%)
               </div>
             </div>
 
