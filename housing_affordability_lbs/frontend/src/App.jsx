@@ -326,9 +326,9 @@ export default function App() {
 
     return {
       color: isSelected ? "#111827" : "#475569",
-      weight: isSelected ? 3 : 1,
+      weight: isSelected ? 2.5 : 1,
       fillColor: getSuitabilityColour(result.status),
-      fillOpacity: isSelected ? 0.75 : selectedKey ? 0.2 : 0.45,
+      fillOpacity: isSelected ? 0.78 : selectedKey ? 0.38 : 0.55,
       dashArray: isSelected ? "0" : null,
       opacity: isSelected ? 1 : 0.8,
     };
@@ -349,8 +349,8 @@ export default function App() {
       if (!feature || !feature.geometry) return;
 
       try {
-        const layer = L.geoJSON(feature);
-        const bounds = layer.getBounds();
+        //const layer = L.geoJSON(feature);
+        const bounds = L.geoJSON(feature).getBounds();
 
         if (bounds && bounds.isValid()) {
           map.flyToBounds(bounds, {
@@ -381,7 +381,7 @@ export default function App() {
         e.target.setStyle({
           weight: 2,
           color: "#000",
-          fillOpacity: 0.55,
+          fillOpacity: 0.65,
         });
       },
 
@@ -948,7 +948,7 @@ export default function App() {
                 {selectedKey ? getAreaDescription(selectedKey) : "—"}
               </div>
 
-              <div style={{ fontSize: "36px", fontWeight: 800, marginBottom: "4px", color: "#0b2a4a" }}>
+              <div style={{ fontSize: "42px", letterSpacing: "-1px", fontWeight: 800, marginBottom: "4px", color: "#0b2a4a" }}>
                 {(selectedResult.score * 100).toFixed(0)}%
               </div>
 
@@ -956,25 +956,21 @@ export default function App() {
                 {getStatusLabel(selectedResult.status)}
               </div>
 
-              <div style={{ fontSize: "16px", color: "#64748b", marginBottom: "18px" }}>
+              <div style={{ fontSize: "16px", color: "#64748b", marginTop: "18px", marginBottom: "18px" }}>
                 Overall suitability score
               </div>
 
-              <div style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic", marginBottom: "18px"}}>
-                Based on your selected criteria and priorities
-              </div>
-
-              <div style={{ fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
+              <div style={{ fontSize: "17px", letterSpacing: "-0.2px", fontWeight: 700, marginTop: "18px", marginBottom: "8px" }}>
                 Why this area matches
               </div>
 
-              <div style={{ display: "grid", gap: "8px", fontSize: "16px", marginBottom: "20px" }}>
+              <div style={{ display: "grid", gap: "8px", fontSize: "14px", marginBottom: "20px" }}>
                 {getAreaSummary(selectedArea, activeFilters).map((line, idx) => (
                   <div key={idx}>{line}</div>
                 ))}
               </div>
 
-              <div style={{ fontSize: "16px", fontWeight: 700, marginBottom: "14px" }}>
+              <div style={{ fontSize: "17px", letterSpacing: "-0.2px", fontWeight: 700, marginTop: "18px", marginBottom: "14px" }}>
                 Compared to other areas
               </div>
 
@@ -1244,7 +1240,9 @@ export default function App() {
           zIndex: 1100,
           boxShadow: "-4px 0 20px rgba(0,0,0,0.15)",
           transition: "width 0.3s ease",
-          overflow: "hidden",
+          overflow: "auto",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <div
