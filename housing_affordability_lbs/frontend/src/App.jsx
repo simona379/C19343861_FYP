@@ -339,7 +339,7 @@ export default function App() {
 
         if (bounds && bounds.isValid()) {
           map.fitToBounds(bounds, {
-            padding: [170, 170],
+            padding: [160, 160],
             maxZoom: 12,
           });
         } else {
