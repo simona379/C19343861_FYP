@@ -560,12 +560,24 @@ export default function App() {
             fontWeight: 600,
           }}
         >
-          Importance
+          Importance (priority)
         </div>
 
         <div style={{ display: "flex", gap: "8px" }}>
           {[1, 2, 3].map((value) => {
             const isActive = selectedWeight === value;
+
+            const labels = {
+              1: "Low",
+              2: "Medium",
+              3: "High",
+            };
+
+            const backgrounds = {
+              1: "#f1f5f9",   // light grey
+              2: "#c7d2fe",   // soft blue
+              3: "#93c5fd",   // stronger blue
+            };
 
             return (
               <button
@@ -579,21 +591,29 @@ export default function App() {
                 }
                 style={{
                   border: isActive ? "2px solid #0b2a4a" : "1px solid #cbd5e1",
-                  background: isActive ? "#dbeafe" : "white",
-                  color: isActive ? "#0b2a4a" : "#475569",
+                  background: isActive ? backgrounds[value]: "white",
+                  color: "#1f2d3d",
                   borderRadius: "999px",
-                  minWidth: "34px",
+                  padding: "6px 10px",
+                  minWidth: "60px",
                   height: "30px",
-                  fontSize: "13px",
+                  fontSize: "12px",
                   fontWeight: 700,
                   cursor: "pointer",
+                  transition: "all 0.15s ease",
                 }}
-                aria-label={`${label} importance ${value}`}
               >
-                {value}
+                {labels[value]}
               </button>
             );
           })}
+        </div>
+        <div style={{
+          fontSize: "11px",
+          color: "#94a3b8",
+          marginTop: "4px"
+        }}>
+          Higher importance = stronger influence on results
         </div>
       </div>
     );
@@ -647,7 +667,7 @@ export default function App() {
             fontWeight: 600,
           }}
         >
-          Prototype Interface
+          Explore map by selecting areas!
         </div>
       </div>
 
@@ -709,7 +729,7 @@ export default function App() {
           }}
         >
           <div style={{ fontSize: "18px", fontWeight: 700, color: "#1f2d3d" }}>
-            Summary
+            Selected Area
           </div>
 
           <button
@@ -839,6 +859,13 @@ export default function App() {
                 ]
                   .filter(Boolean)
                   .join(", ")}
+              </div>
+
+              <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "8px", lineHeight: 1.5 }}>
+                {activeFilters.schools && `Schools: ${amenityWeights.schools === 1 ? "Low" : amenityWeights.schools === 2 ? "Medium" : "High"} `}
+                {activeFilters.parks && `Parks: ${amenityWeights.parks === 1 ? "Low" : amenityWeights.parks === 2 ? "Medium" : "High"} `}
+                {activeFilters.universities && `Higher education: ${amenityWeights.universities === 1 ? "Low" : amenityWeights.universities === 2 ? "Medium" : "High"} `}
+                {activeFilters.transport && `Transport: ${amenityWeights.transport === 1 ? "Low" : amenityWeights.transport === 2 ? "Medium" : "High"} `}
               </div>
           </>
           )}
