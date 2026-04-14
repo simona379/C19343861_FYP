@@ -368,8 +368,8 @@ export default function App() {
     return null;
   }
 
-  // onEachFeature function
-
+  // -------------------------------------------------------------------------
+  // onEachFeature (polygon routing key)  function
   const onEachFeature = (feature, layer) => {
 
     const key = String(feature.properties.RoutingKey).trim().toUpperCase();
@@ -398,15 +398,28 @@ export default function App() {
 
     });
 
-    const summary = getAreaSummary(area, activeFilters);
     const result = classifyArea(area, activeFilters);
 
-    layer.bindPopup(`
-      <b>${key} - ${getAreaDescription(key)}</b><br/>
-      ${summary.join("<br/>")}
-      <br/><br/>
-      <b>Score: ${(result.score * 100).toFixed(0)}%</b>
-    `);
+    layer.bindTooltip(
+      `
+      <div style="font-size:12px; line-height:1.35; padding:1px 2px;">
+        <div style="font-weight:700; margin-bottom:2px;">
+          ${key} - ${getAreaDescription(key)}
+        </div>
+        <div style="color:#475569; margin-bottom:2px;">
+          ${getStatusLabel(result.status)}
+        </div>
+        <div style="font-weight:600;">
+          ${(result.score * 100).toFixed(0)}%
+        </div>
+      </div>
+      `,
+      {
+        sticky: true,
+        direction: "top",
+        opacity: 0.92,
+      }
+    );
   };
 
   // -------------------------------------------------------------------------
@@ -652,8 +665,7 @@ export default function App() {
           fontWeight: 600,
         }}
       >
-        {label}: {isAbove ? "+" : "−"}
-        {comparison.percent}% vs average
+        {label}: {isAbove ? "above average" : "below average"} ({isAbove ? "+" : "−"}{comparison.percent}%)
       </div>
     );
   };
@@ -954,8 +966,11 @@ export default function App() {
                 Overall suitability score
               </div>
 
-              <div style={{ fontSize: "18px", fontWeight: 700, marginBottom: "12px" }}>
-                Why this area matches your criteria
+              <div style={{ fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
+                Why this area matches
+              </div>
+              <div style={{ fontSize: "14px", fontStyle: "italic", marginBottom: "12px"}}>
+                (based on your preferences)
               </div>
 
               <div style={{ display: "grid", gap: "8px", fontSize: "16px", marginBottom: "20px" }}>
@@ -964,8 +979,8 @@ export default function App() {
                 ))}
               </div>
 
-              <div style={{ fontSize: "13px", color: "#475569", marginBottom: "14px" }}>
-                Compared to average:
+              <div style={{ fontSize: "16px", fontWeight: 700, marginBottom: "14px" }}>
+                How it compares to other areas:
               </div>
 
               <div style={{ display: "grid", gap: "6px", fontSize: "14px", marginBottom: "16px" }}>
@@ -986,24 +1001,31 @@ export default function App() {
                 )}
               </div>
 
-              <div style={{ fontSize: "13px", color: "#475569", marginTop: "4px" }}>
-                Based on{" "}
-                {[
-                  activeFilters.budget && "Budget",
-                  activeFilters.schools && "Schools",
-                  activeFilters.parks && "Parks",
-                  activeFilters.universities && "Higher education",
-                  activeFilters.transport && "DART / Luas access",
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
-              </div>
+              <div style={{ fontSize: "12px", color: "#475569", marginTop: "10px", lineHeight: 1.5 }}>
+                <div>
+                  <strong>Criteria:</strong>{" "}
+                  {[
+                    activeFilters.budget && "Budget",
+                    activeFilters.schools && "Schools",
+                    activeFilters.parks && "Parks",
+                    activeFilters.universities && "Higher education",
+                    activeFilters.transport && "Transport",
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </div>
 
-              <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "8px", lineHeight: 1.5 }}>
-                {activeFilters.schools && `Schools: ${amenityWeights.schools === 1 ? "Low" : amenityWeights.schools === 2 ? "Medium" : "High"} `}
-                {activeFilters.parks && `Parks: ${amenityWeights.parks === 1 ? "Low" : amenityWeights.parks === 2 ? "Medium" : "High"} `}
-                {activeFilters.universities && `Higher education: ${amenityWeights.universities === 1 ? "Low" : amenityWeights.universities === 2 ? "Medium" : "High"} `}
-                {activeFilters.transport && `Transport: ${amenityWeights.transport === 1 ? "Low" : amenityWeights.transport === 2 ? "Medium" : "High"} `}
+                <div style={{ marginTop: "4px" }}>
+                  <strong>Priority:</strong>{" "}
+                  {[
+                    activeFilters.schools && `Schools ${amenityWeights.schools === 1 ? "Low" : amenityWeights.schools === 2 ? "Medium" : "High"}`,
+                    activeFilters.parks && `Parks ${amenityWeights.parks === 1 ? "Low" : amenityWeights.parks === 2 ? "Medium" : "High"}`,
+                    activeFilters.universities && `Higher education ${amenityWeights.universities === 1 ? "Low" : amenityWeights.universities === 2 ? "Medium" : "High"}`,
+                    activeFilters.transport && `Transport ${amenityWeights.transport === 1 ? "Low" : amenityWeights.transport === 2 ? "Medium" : "High"}`,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </div>
               </div>
           </>
           )}
@@ -1385,15 +1407,15 @@ export default function App() {
 
             <div style={{ display: "grid", gap: "8px", marginBottom: "16px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#16a34a", display: "inline-block" }} />
                 Best match (80-100%)
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#f97316", display: "inline-block" }} />
+                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#f59e0b", display: "inline-block" }} />
                 Close match (40-79%)
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#7f1d1d", display: "inline-block" }} />
+                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#dc2626", display: "inline-block" }} />
                 Not suitable (0-39%)
               </div>
             </div>
