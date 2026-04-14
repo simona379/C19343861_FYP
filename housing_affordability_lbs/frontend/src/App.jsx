@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
@@ -19,7 +19,8 @@ ChartJS.register(
   PointElement,
   LineElement,
   Tooltip,
-  Legend
+  Legend,
+  BarElement
 );
 
 function FitToFilteredData() {
@@ -407,7 +408,7 @@ export default function App() {
   };
 
   // -------------------------------------------------------------------------
-  // Chart data object
+  // Chart 1 data object (median price of area year by year)
   const chartData = {
     labels: trendData.map((row) => row.year),
     datasets: [
@@ -447,6 +448,75 @@ export default function App() {
     },
   };
 
+  //  chart 2 (average amenities per routing key)
+  function averageOf(field) {
+    const values = Object.values(stats)
+      .map((area) => Number(area?.[field] ?? 0))
+      .filter((value) => !Number.isNaN(value));
+
+    if (values.length === 0) return;
+
+    return values.reduce((sum, value) => sum + value, 0) / values.length;
+  }
+
+  const averageSchools = averageOf("school_count");
+  const averageParks = averageOf("park_count");
+  const averageUniversities = averageOf("university_count");
+  const averageTransport = averageOf("rail_tram_count");
+
+  const amenityComparisonData = {
+    labels: ["Schools", "Parks", "Higher Education", "DART / Luas"],
+    datasets: [
+      {
+        label: "Selected area",
+        data: [
+          selectedArea?.school_count ?? 0,
+          selectedArea?.park_count ?? 0,
+          selectedArea?.university_count ?? 0,
+          selectedArea?.rail_tram_count ?? 0,
+        ],
+        backgroundColor: "rgba(29, 78, 216, 0.85)",
+        borderRadius: 6,
+      },
+      {
+        label: "Average",
+        data: [
+          Number(averageSchools.toFixed(1)),
+          Number(averageParks.toFixed(1)),
+          Number(averageHigherEducation.toFixed(1)),
+          Number(averageTransport.toFixed(1)),
+        ],
+        backgroundColor: "rgba(148, 163, 184, 0.85)",
+        borderRadius: 6,
+      },
+    ],
+  };
+
+  const amenityComparisonOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            return `${context.dataset.label}: ${context.raw}`;
+          },
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+
+
+
+  // -------------------------------------------------------------------------
   // Summary Explanation Function
   function getAreaSummary(area, filters) {
     if (!area) return [];
@@ -502,6 +572,7 @@ export default function App() {
     return summary;
   };
 
+  // ------------------------------------------------------------------------- 
   //NAmes for routing keys
   function toTitleCase(text) {
     if (!text) return "";
@@ -1014,6 +1085,31 @@ export default function App() {
                   </div>
                 )}
               </div>
+
+              <div style={{ fontSize: "22px", fontWeight: 700, marginTop: "28px", marginBottom: "14px" }}>
+                Amenity Comparison
+              </div>
+
+              <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "10px" }}>
+                Selected area compared with the average across all routing key areas
+              </div>
+
+              <div
+                style={{
+                  height: "280px",
+                  borderTop: "1px solid #e6e6e6",
+                  paddingTop: "14px",
+                }}
+              >
+                {selectedArea ? (
+                  <Bar data={amenityComparisonData} options={amenityComparisonOptions} />
+                ) : (
+                  <div style={{ color: "#94a3b8", fontSize: "14px" }}>
+                    Select an area to view amenity comparison
+                  </div>
+                )}
+              </div>
+
             </>
           )}
         </div>
