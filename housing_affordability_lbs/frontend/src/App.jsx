@@ -325,10 +325,10 @@ export default function App() {
     const isSelected = key === selectedKey;
 
     return {
-      color: isSelected ? "#111827" : "#333",
+      color: isSelected ? "#111827" : "#475569",
       weight: isSelected ? 3 : 1,
       fillColor: getSuitabilityColour(result.status),
-      fillOpacity: isSelected ? 0.75 : 0.45,
+      fillOpacity: isSelected ? 0.75 : selectedKey ? 0.2 : 0.45,
       dashArray: isSelected ? "0" : null,
       opacity: isSelected ? 1 : 0.8,
     };
@@ -369,7 +369,7 @@ export default function App() {
   }
 
   // -------------------------------------------------------------------------
-  // onEachFeature (polygon routing key)  function
+// Polygon interaction + tooltip
   const onEachFeature = (feature, layer) => {
 
     const key = String(feature.properties.RoutingKey).trim().toUpperCase();
@@ -379,9 +379,9 @@ export default function App() {
 
       mouseover: (e) => {
         e.target.setStyle({
-          weight: 3,
+          weight: 2,
           color: "#000",
-          fillOpacity: 0.9,
+          fillOpacity: 0.55,
         });
       },
 
@@ -406,7 +406,7 @@ export default function App() {
         <div style="font-weight:700; margin-bottom:2px;">
           ${key} - ${getAreaDescription(key)}
         </div>
-        <div style="color:#475569; margin-bottom:2px;">
+        <div style="color:#64748b; margin-bottom:2px;">
           ${getStatusLabel(result.status)}
         </div>
         <div style="font-weight:600;">
@@ -652,7 +652,7 @@ export default function App() {
     return descriptor ? toTitleCase(descriptor) : key;
   }
 
-  // Comparison Amenities Average with other areas function for UI
+  // Comparison row for selected area vs overall average
   function ComparisonRow({ label, comparison }) {
     if (!comparison) return null;
 
@@ -712,12 +712,6 @@ export default function App() {
               3: "High",
             };
 
-            const backgrounds = {
-              1: "#f1f5f9",   // light grey
-              2: "#c7d2fe",   // soft blue
-              3: "#93c5fd",   // stronger blue
-            };
-
             return (
               <button
                 key={value}
@@ -730,7 +724,7 @@ export default function App() {
                 }
                 style={{
                   border: isActive ? "2px solid #0b2a4a" : "1px solid #cbd5e1",
-                  background: isActive ? "#0b2a4a": "#f8fafc",
+                  background: isActive ? "#0b2a4a" : "transparent",
                   color: isActive? "white" : "#475569",
                   borderRadius: "999px",
                   padding: "6px 10px",
@@ -792,7 +786,7 @@ export default function App() {
 
         <div
           style={{
-            background: "#b38af0",
+            background: "#6fa3eb",
             padding: "8px 16px",
             borderRadius: "999px",
             fontSize: "14px",
@@ -903,8 +897,8 @@ export default function App() {
           <button
             onClick={() => setActivePanelTab("rankings")}
             style={{
-              border: "none",
-              borderRadius: "10px",
+              border: "1px solid #edf2f7",
+              boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)",
               padding: "8px 12px",
               fontWeight: 700,
               cursor: "pointer",
@@ -962,15 +956,16 @@ export default function App() {
                 {getStatusLabel(selectedResult.status)}
               </div>
 
-              <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "18px" }}>
+              <div style={{ fontSize: "16px", color: "#64748b", marginBottom: "18px" }}>
                 Overall suitability score
+              </div>
+
+              <div style={{ fontSize: "12px", color: "#64748b", fontStyle: "italic", marginBottom: "18px"}}>
+                Based on your selected criteria and priorities
               </div>
 
               <div style={{ fontSize: "16px", fontWeight: 700, marginBottom: "8px" }}>
                 Why this area matches
-              </div>
-              <div style={{ fontSize: "14px", fontStyle: "italic", marginBottom: "12px"}}>
-                (based on your preferences)
               </div>
 
               <div style={{ display: "grid", gap: "8px", fontSize: "16px", marginBottom: "20px" }}>
@@ -980,7 +975,7 @@ export default function App() {
               </div>
 
               <div style={{ fontSize: "16px", fontWeight: 700, marginBottom: "14px" }}>
-                How it compares to other areas:
+                Compared to other areas
               </div>
 
               <div style={{ display: "grid", gap: "6px", fontSize: "14px", marginBottom: "16px" }}>
@@ -1003,7 +998,7 @@ export default function App() {
 
               <div style={{ fontSize: "12px", color: "#475569", marginTop: "10px", lineHeight: 1.5 }}>
                 <div>
-                  <strong>Criteria:</strong>{" "}
+                  <strong>Selected criteria:</strong>{" "}
                   {[
                     activeFilters.budget && "Budget",
                     activeFilters.schools && "Schools",
@@ -1016,7 +1011,7 @@ export default function App() {
                 </div>
 
                 <div style={{ marginTop: "4px" }}>
-                  <strong>Priority:</strong>{" "}
+                  <strong>Priority levels:</strong>{" "}
                   {[
                     activeFilters.schools && `Schools ${amenityWeights.schools === 1 ? "Low" : amenityWeights.schools === 2 ? "Medium" : "High"}`,
                     activeFilters.parks && `Parks ${amenityWeights.parks === 1 ? "Low" : amenityWeights.parks === 2 ? "Medium" : "High"}`,
@@ -1033,7 +1028,7 @@ export default function App() {
           {activePanelTab === "rankings" && (
             <>
               <div style={{ fontSize: "24px", fontWeight: 800, marginBottom: "18px" }}>
-                Top Matching Areas
+                Best Matching Areas
               </div>
 
               <div style={{ display: "grid", gap: "12px" }}>
@@ -1051,6 +1046,8 @@ export default function App() {
                       padding: "14px",
                       cursor: "pointer",
                       background: "white",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                      transition: "all 0.15s ease",
                     }}
                   >
                     <div 
@@ -1064,7 +1061,7 @@ export default function App() {
                     >
                       <div>
                         <div style={{ fontWeight: 800, fontSize: "18px", lineHeight: 1.2 }}>
-                          {index + 1}. {getAreaDescription(item.key)}
+                          #{index + 1}. {getAreaDescription(item.key)}
                         </div>
                         <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
                           {item.key}
@@ -1109,7 +1106,7 @@ export default function App() {
           {activePanelTab === "analysis" && (
             <>
               <div style={{ fontSize: "24px", fontWeight: 800, marginBottom: "18px" }}>
-                Area Analysis
+                Area Insights
               </div>
 
               <div style={{ display: "grid", gap: "18px", marginBottom: "28px" }}>
@@ -1166,48 +1163,68 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "14px" }}>
-                Price Trend
+              <div style={{
+                background: "#fcfcfd",
+                borderRadius: "12px",
+                padding: "14px",
+                border: "1px solid #eef2f7",
+              }}>
+
+                <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "14px" }}>
+                  Price Trend
+                </div>
+
+                <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "6px" }}>
+                  Median price over time
+                </div>
+
+                <div
+                  style={{
+                    height: "260px",
+                    borderTop: "1px solid #e6e6e6",
+                    paddingTop: "14px",
+                  }}
+                >
+                  {trendData.length > 0 ? (
+                    <Line data={chartData} options={chartOptions} />
+                  ) : (
+                    <div style={{ color: "#94a3b8", fontSize: "14px" }}>
+                      No trend data available
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div
-                style={{
-                  height: "260px",
-                  borderTop: "1px solid #e6e6e6",
-                  paddingTop: "14px",
-                }}
-              >
-                {trendData.length > 0 ? (
-                  <Line data={chartData} options={chartOptions} />
-                ) : (
-                  <div style={{ color: "#94a3b8", fontSize: "14px" }}>
-                    No trend data available
-                  </div>
-                )}
-              </div>
+              <div style={{
+                background: "#fcfcfd",
+                borderRadius: "12px",
+                padding: "14px",
+                border: "1px solid #eef2f7",
+              }}>
 
-              <div style={{ fontSize: "22px", fontWeight: 700, marginTop: "28px", marginBottom: "14px" }}>
-                Amenity Comparison
-              </div>
+                <div style={{ fontSize: "22px", fontWeight: 700, marginTop: "0px", marginBottom: "14px" }}>
+                  Amenity Comparison
+                </div>
 
-              <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "10px" }}>
-                Selected area compared with the average across all routing key areas
-              </div>
+                <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "10px" }}>
+                  Selected area compared with the average across all routing key areas
+                </div>
 
-              <div
-                style={{
-                  height: "280px",
-                  borderTop: "1px solid #e6e6e6",
-                  paddingTop: "14px",
-                }}
-              >
-                {selectedArea ? (
-                  <Bar data={amenityComparisonData} options={amenityComparisonOptions} />
-                ) : (
-                  <div style={{ color: "#94a3b8", fontSize: "14px" }}>
-                    Select an area to view amenity comparison
-                  </div>
-                )}
+                <div
+                  style={{
+                    height: "280px",
+                    borderTop: "1px solid #e6e6e6",
+                    paddingTop: "14px",
+                  }}
+                >
+                  {selectedArea ? (
+                    <Bar data={amenityComparisonData} options={amenityComparisonOptions} />
+                  ) : (
+                    <div style={{ color: "#94a3b8", fontSize: "14px" }}>
+                      Select an area to view amenity comparison
+                    </div>
+                  )}
+                </div>
               </div>
 
             </>
@@ -1313,7 +1330,7 @@ export default function App() {
             </div>
 
             <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "12px" }}>
-              Amenity Filters
+              Preferences
             </div>
 
               <div style={{
@@ -1325,7 +1342,12 @@ export default function App() {
                 Higher importance = stronger influence on results
               </div>
 
-              <div style={{ marginBottom: "12px" }}>
+              <div style={{ 
+                padding: "12px",
+                borderRadius: "10px",
+                background: "#f8fafc",
+                marginBottom: "12px" 
+              }}>
                 <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                   <input
                     type="checkbox"
@@ -1344,7 +1366,12 @@ export default function App() {
                 {activeFilters.schools && renderWeightSelector("schools", "Schools")}
               </div>
 
-              <div style={{ marginBottom: "12px" }}>
+              <div style={{ 
+                padding: "12px",
+                borderRadius: "10px",
+                background: "#f8fafc",
+                marginBottom: "12px" 
+              }}>
                 <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                   <input
                     type="checkbox"
@@ -1363,7 +1390,12 @@ export default function App() {
                 {activeFilters.parks && renderWeightSelector("parks", "Parks")}
               </div>
 
-              <div style={{ marginBottom: "12px" }}>
+              <div style={{ 
+                padding: "12px",
+                borderRadius: "10px",
+                background: "#f8fafc",
+                marginBottom: "12px" 
+              }}>
                 <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                   <input
                     type="checkbox"
@@ -1382,7 +1414,12 @@ export default function App() {
                 {activeFilters.universities && renderWeightSelector("universities", "Higher education")}
               </div>
 
-              <div style={{ marginBottom: "12px" }}>
+              <div style={{ 
+                padding: "12px",
+                borderRadius: "10px",
+                background: "#f8fafc",
+                marginBottom: "12px" 
+              }}>
                 <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
                   <input
                     type="checkbox"
@@ -1402,7 +1439,7 @@ export default function App() {
               </div>
 
             <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px" }}>
-              Area Suitability
+              Score guide
             </div>
 
             <div style={{ display: "grid", gap: "8px", marginBottom: "16px" }}>
