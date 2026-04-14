@@ -58,6 +58,14 @@ export default function App() {
     transport: false,
   });
 
+  // Amenity weight state
+  const [amenityWeights, setAmenityWeights] = useState({
+    schools: 2,
+    parks: 2,
+    universities: 2,
+    transport: 2,
+  });
+
   // State for sidebar panels
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -180,67 +188,88 @@ export default function App() {
     return 0;
   }
 
+  // helper for budget scoring
+  function getBudgetScore(area) {
+    if (!area) return 0;
+
+    const price = Number(area.median_price ?? 0);
+    const min = minBudget;
+    const max = maxBudget;
+    const tolerance = 50000;
+
+    if (price >= min && price <= max) return 1;
+
+    if (
+      (price >= min - tolerance && price < min) ||
+      (price > max && price <= max + tolerance)
+    ) {
+      return 0.5;
+    }
+
+    return 0;
+
+  }
+
   // Classification Function
   function classifyArea(area, filters) {
 
     if (!area) return { status: "no-data", score: 0 };
 
-    let score = 0;
-    let checks = 0;
+    const budgetScore = filters.budget ? getBudgetScore(area) : 0;
 
-    // Budget scoring
-    if (filters.budget) {
-      checks += 1;
-
-      const price = Number(area.median_price ?? 0);
-      const min = minBudget;
-      const max = maxBudget;
-      const tolerance = 50000;
-
-      if (price >= min && price <= max) {
-        score += 1;
-      } else if (
-        (price >= min - tolerance && price < min) ||
-        (price > max && price <= max + tolerance)
-      ) {
-        score += 0.5;
-      }
-    }
+    const amenityContributions = [];
+    let totalAmenityWeight = 0;
 
     // filters go here
     // parks
     if (filters.parks) {
-      checks += 1;
-      score += scoreAmenity(area.park_count, parkThresholds);
+      const weight = amenityWeights.parks;
+      const amenityScore = scoreAmenity(area.park_count, parkThresholds);
+      amenityContributions.push(amenityScore * weight);
+      totalAmenityWeight += weight;
     }
     
     // schools
     if (filters.schools) {
-      checks += 1;
-      score += scoreAmenity(area.school_count, schoolThresholds);
+      const weight = amenityWeights.schools;
+      const amenityScore = scoreAmenity(area.school_count, schoolThresholds);
+      amenityContributions.push(amenityScore * weight);
+      totalAmenityWeight += weight;
     }
 
     // universities
     if (filters.universities) {
-      checks += 1;
-      score += scoreAmenity(area.university_count, universityThresholds);
+      const weight = amenityWeights.universities;
+      const amenityScore = scoreAmenity(area.university_count, universityThresholds);
+      amenityContributions.push(amenityScore * weight);
+      totalAmenityWeight += weight;
     }
+
 
     // DART/LUAs access
     if (filters.transport) {
-      checks += 1;
-      score += scoreAmenity(area.rail_tram_count, railTramThresholds);
+      const weight = amenityWeights.transport;
+      const amenityScore = scoreAmenity(area.rail_tram_count, railTramThresholds);
+      amenityContributions.push(amenityScore * weight);
+      totalAmenityWeight += weight;
     }
 
-    if (checks === 0) {
-      return { status: "neutral", score: 0 };
+    let finalScore = 0;
+
+    // if no amenity filters are selected, score falls back to budget only
+    if (totalAmenityWeight === 0) {
+      finalScore = budgetScore;
+    } else {
+      const weightedAmenityScore = 
+        amenityContributions.reduce((sum, value) => sum + value, 0) / totalAmenityWeight;
+
+      // budget + weighted amenity score combined equally
+      finalScore = (budgetScore + weightedAmenityScore) / 2; 
     }
 
-    const ratio = score / checks;
-
-    if (ratio >= 0.8) return { status: "best-match", score: ratio };
-    if (ratio >= 0.4) return { status: "close-match", score: ratio };
-    return { status: "outside-range", score: ratio };
+    if (finalScore >= 0.8) return { status: "best-match", score: finalScore };
+    if (finalScore >= 0.4) return { status: "close-match", score: finalScore };
+    return { status: "outside-range", score: finalScore };
 
   }
 
@@ -309,9 +338,9 @@ export default function App() {
         const bounds = layer.getBounds();
 
         if (bounds && bounds.isValid()) {
-          map.FlyToBounds(bounds, {
+          map.flyToBounds(bounds, {
             padding: [180, 180],
-            maxZoom: 12,
+            maxZoom: 10,
             duration: 1.2,
           });
         } else {
@@ -500,6 +529,64 @@ export default function App() {
   }
 
   const selectedResult = classifyArea(selectedArea, activeFilters);
+
+  function renderWeightSelector(filterKey, label) {
+    const selectedWeight = amenityWeights[filterKey];
+
+    return (
+      <div
+        style={{
+          marginTop: "8px",
+          marginLeft: "26px",
+          marginBottom: "4px",
+        }}
+      >
+        <div
+          style={{
+            fontSize: "12px",
+            color: "#64748b",
+            marginBottom: "6px",
+            fontWeight: 600,
+          }}
+        >
+          Importance
+        </div>
+
+        <div style={{ display: "flex", gap: "8px" }}>
+          {[1, 2, 3].map((value) => {
+            const isActive = selectedWeight === value;
+
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() =>
+                  setAmenityWeights((prev) => ({
+                    ...prev,
+                    [filterKey]: value,
+                  }))
+                }
+                style={{
+                  border: isActive ? "2px solid #0b2a4a" : "1px solid #cbd5e1",
+                  background: isActive ? "#dbeafe" : "white",
+                  color: isActive ? "#0b2a4a" : "#475569",
+                  borderRadius: "999px",
+                  minWidth: "34px",
+                  height: "30px",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  cursor: "pointer",
+                }}
+                aria-label={`${label} importance ${value}`}
+              >
+                {value}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
 
   return (
@@ -1006,51 +1093,81 @@ export default function App() {
               Amenity Filters
             </div>
 
-            <div style={{ display: "grid", gap: "10px", marginBottom: "20px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <input
-                  type="checkbox"
-                  checked={activeFilters.schools}
-                  onChange={(e) =>
-                    setActiveFilters((prev) => ({ ...prev, schools: e.target.checked }))
-                  }
-                />
-                Schools
-              </label>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+                  <input
+                    type="checkbox"
+                    checked={activeFilters.schools}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setActiveFilters((prev) => ({ ...prev, schools: checked }));
+                      if (!checked) {
+                        setAmenityWeights((prev) => ({ ...prev, schools: 2 }));
+                      }
+                    }}
+                  />
+                  Schools
+                </label>
 
-              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <input
-                  type="checkbox"
-                  checked={activeFilters.parks}
-                  onChange={(e) =>
-                    setActiveFilters((prev) => ({ ...prev, parks: e.target.checked }))
-                  }
-                />
-                Parks
-              </label>
+                {activeFilters.schools && renderWeightSelector("schools", "Schools")}
+              </div>
 
-              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <input
-                  type="checkbox"
-                  checked={activeFilters.universities}
-                  onChange={(e) =>
-                    setActiveFilters((prev) => ({ ...prev, universities: e.target.checked }))
-                  }
-                />
-                Higher education
-              </label>
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+                  <input
+                    type="checkbox"
+                    checked={activeFilters.parks}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setActiveFilters((prev) => ({ ...prev, parks: checked }));
+                      if (!checked) {
+                        setAmenityWeights((prev) => ({ ...prev, parks: 2 }));
+                      }
+                    }}
+                  />
+                  Parks
+                </label>
 
-              <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <input
-                  type="checkbox"
-                  checked={activeFilters.transport}
-                  onChange={(e) =>
-                    setActiveFilters((prev) => ({ ...prev, transport: e.target.checked }))
-                  }
-                />
-                DART / Luas access
-              </label>
-            </div>
+                {activeFilters.parks && renderWeightSelector("parks", "Parks")}
+              </div>
+
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+                  <input
+                    type="checkbox"
+                    checked={activeFilters.universities}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setActiveFilters((prev) => ({ ...prev, universities: checked }));
+                      if (!checked) {
+                        setAmenityWeights((prev) => ({ ...prev, universities: 2 }));
+                      }
+                    }}
+                  />
+                  Higher education
+                </label>
+
+                {activeFilters.universities && renderWeightSelector("universities", "Higher education")}
+              </div>
+
+              <div style={{ marginBottom: "12px" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+                  <input
+                    type="checkbox"
+                    checked={activeFilters.transport}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setActiveFilters((prev) => ({ ...prev, transport: checked }));
+                      if (!checked) {
+                        setAmenityWeights((prev) => ({ ...prev, transport: 2 }));
+                      }
+                    }}
+                  />
+                  DART / Luas access
+                </label>
+
+                {activeFilters.transport && renderWeightSelector("transport", "DART / Luas access")}
+              </div>
 
             <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px" }}>
               Area Suitability
