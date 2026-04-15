@@ -665,7 +665,7 @@ export default function App() {
           fontWeight: 600,
         }}
       >
-        {label}: {isAbove ? "above average" : "below average"} ({isAbove ? "+" : "−"}{comparison.percent}%)
+        {label}: {isAbove ? "above average" : "below average"}
       </div>
     );
   };
@@ -897,8 +897,8 @@ export default function App() {
           <button
             onClick={() => setActivePanelTab("rankings")}
             style={{
-              border: "1px solid #edf2f7",
-              boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)",
+              border: "none",
+              borderRadius: "10px",
               padding: "8px 12px",
               fontWeight: 700,
               cursor: "pointer",
