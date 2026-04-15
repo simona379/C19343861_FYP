@@ -375,6 +375,12 @@ export default function App() {
     const key = String(feature.properties.RoutingKey).trim().toUpperCase();
     const area = stats[key];
 
+    layer.on("add", () => {
+      if (layer._path) {
+        layer._path.setAttribute("tabindex", "-1");
+      }
+    });
+
     layer.on({
 
       mouseover: (e) => {
@@ -1031,6 +1037,7 @@ export default function App() {
                 {rankedAreas.map((item, index) => (
                   <div
                     key={item.key}
+                    className="ranking-card"
                     onClick={() => {
                       setSelectedKey(item.key);
                       setActivePanelTab("selected");
