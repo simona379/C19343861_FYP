@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import "./App.css";
 import {
   Chart as ChartJS,
   CategoryScale,
