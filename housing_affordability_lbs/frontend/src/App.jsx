@@ -1,313 +1,3 @@
-import { useState } from "react";
-import "./App.css";
-
-// Layout
-import TopBar from "./components/layout/TopBar";
-import LeftPanel from "./components/layout/LeftPanel";
-import RightSidebar from "./components/layout/RightSidebar";
-
-// Map
-import HousingMap from "./components/map/HousingMap";
-
-// Hooks
-import useGeoData from "./hooks/useGeoData";
-import useRoutingKeyStats from "./hooks/useRoutingKeyStats";
-import useTrendData from "./hooks/useTrendData";
-
-// Utils
-import {
-  classifyArea,
-  getAreaSummary,
-  getThresholds,
-} from "./utils/scoring";
-import { getAreaDescription } from "./utils/geo";
-import { getStatusLabel } from "./utils/formatters";
-
-export default function App() {
-  // ---------------- STATE ----------------
-  const [selectedKey, setSelectedKey] = useState(null);
-
-  const [minBudget, setMinBudget] = useState(500000);
-  const [maxBudget, setMaxBudget] = useState(750000);
-
-  const [activeFilters, setActiveFilters] = useState({
-    budget: true,
-    schools: false,
-    parks: false,
-    universities: false,
-    transport: false,
-  });
-
-  const [amenityWeights, setAmenityWeights] = useState({
-    schools: 2,
-    parks: 2,
-    universities: 2,
-    transport: 2,
-  });
-
-  const [filtersOpen, setFiltersOpen] = useState(true);
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [activePanelTab, setActivePanelTab] = useState("selected");
-
-  // ---------------- DATA ----------------
-  const geoData = useGeoData();
-  const stats = useRoutingKeyStats();
-  const trendData = useTrendData(selectedKey);
-
-  const selectedArea = selectedKey ? stats[selectedKey] : null;
-
-  // ---------------- FILTERED GEO ----------------
-  const filteredGeoData =
-    geoData && Object.keys(stats).length > 0
-      ? {
-          type: "FeatureCollection",
-          features: geoData.features.filter((feature) => {
-            const key = String(feature.properties.RoutingKey)
-              .trim()
-              .toUpperCase();
-            return Object.prototype.hasOwnProperty.call(stats, key);
-          }),
-        }
-      : null;
-
-  // ---------------- THRESHOLDS ----------------
-  const parkThresholds = getThresholds(
-    Object.values(stats).map((a) => a.park_count ?? 0)
-  );
-
-  const schoolThresholds = getThresholds(
-    Object.values(stats).map((a) => a.school_count ?? 0)
-  );
-
-  const universityThresholds = getThresholds(
-    Object.values(stats).map((a) => a.university_count ?? 0)
-  );
-
-  const transportThresholds = getThresholds(
-    Object.values(stats).map((a) => a.rail_tram_count ?? 0)
-  );
-
-  // ---------------- CLASSIFICATION ----------------
-  const selectedResult = classifyArea(
-    selectedArea,
-    activeFilters,
-    amenityWeights,
-    {
-      parkThresholds,
-      schoolThresholds,
-      universityThresholds,
-      transportThresholds,
-    },
-    minBudget,
-    maxBudget
-  );
-
-  // ---------------- RANKINGS ----------------
-  const rankedAreas = Object.entries(stats)
-    .map(([key, area]) => {
-      const result = classifyArea(
-        area,
-        activeFilters,
-        amenityWeights,
-        {
-          parkThresholds,
-          schoolThresholds,
-          universityThresholds,
-          transportThresholds,
-        },
-        minBudget,
-        maxBudget
-      );
-
-      return {
-        key,
-        area,
-        status: result.status,
-        score: result.score,
-      };
-    })
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
-
-  // ---------------- AVERAGES + COMPARISON ----------------
-  const averageOf = (field) => {
-    const values = Object.values(stats)
-      .map((a) => Number(a?.[field] ?? 0))
-      .filter((v) => !Number.isNaN(v));
-
-    if (!values.length) return 0;
-    return values.reduce((s, v) => s + v, 0) / values.length;
-  };
-
-  const getComparison = (value, avg) => {
-    if (!avg) return null;
-    const diff = ((value - avg) / avg) * 100;
-    return {
-      percent: Math.abs(diff).toFixed(0),
-      direction: diff >= 0 ? "above" : "below",
-    };
-  };
-
-  const averageSchools = averageOf("school_count");
-  const averageParks = averageOf("park_count");
-  const averageUniversities = averageOf("university_count");
-  const averageTransport = averageOf("rail_tram_count");
-
-  const schoolComparison = getComparison(
-    selectedArea?.school_count ?? 0,
-    averageSchools
-  );
-
-  const parkComparison = getComparison(
-    selectedArea?.park_count ?? 0,
-    averageParks
-  );
-
-  const universityComparison = getComparison(
-    selectedArea?.university_count ?? 0,
-    averageUniversities
-  );
-
-  const transportComparison = getComparison(
-    selectedArea?.rail_tram_count ?? 0,
-    averageTransport
-  );
-
-  // ---------------- CHART DATA ----------------
-  const chartData = {
-    labels: trendData.map((r) => r.year),
-    datasets: [
-      {
-        label: "Median Price (€)",
-        data: trendData.map((r) => r.median_price),
-        borderColor: "#1d4ed8",
-        backgroundColor: "#1d4ed8",
-        tension: 0.25,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-  };
-
-  const amenityComparisonData = {
-    labels: ["Schools", "Parks", "Higher Education", "DART / Luas"],
-    datasets: [
-      {
-        label: "Selected area",
-        data: [
-          selectedArea?.school_count ?? 0,
-          selectedArea?.park_count ?? 0,
-          selectedArea?.university_count ?? 0,
-          selectedArea?.rail_tram_count ?? 0,
-        ],
-      },
-      {
-        label: "Average",
-        data: [
-          averageSchools,
-          averageParks,
-          averageUniversities,
-          averageTransport,
-        ],
-      },
-    ],
-  };
-
-  const amenityComparisonOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-  };
-
-  // ---------------- RENDER ----------------
-  return (
-    <div
-      style={{
-        height: "100vh",
-        width: "100vw",
-        position: "relative",
-        overflow: "hidden",
-        fontFamily: "Inter, Arial, sans-serif",
-        background: "#f5f7fa",
-      }}
-    >
-      <TopBar />
-
-      <HousingMap
-        geoData={geoData}
-        filteredGeoData={filteredGeoData}
-        stats={stats}
-        selectedKey={selectedKey}
-        setSelectedKey={setSelectedKey}
-        activeFilters={activeFilters}
-        amenityWeights={amenityWeights}
-        minBudget={minBudget}
-        maxBudget={maxBudget}
-        setPanelOpen={setPanelOpen}
-        setActivePanelTab={setActivePanelTab}
-      />
-
-      <LeftPanel
-        panelOpen={panelOpen}
-        setPanelOpen={setPanelOpen}
-        activePanelTab={activePanelTab}
-        setActivePanelTab={setActivePanelTab}
-        selectedKey={selectedKey}
-        selectedArea={selectedArea}
-        selectedResult={selectedResult}
-        activeFilters={activeFilters}
-        amenityWeights={amenityWeights}
-        rankedAreas={rankedAreas}
-        trendData={trendData}
-        chartData={chartData}
-        chartOptions={chartOptions}
-        amenityComparisonData={amenityComparisonData}
-        amenityComparisonOptions={amenityComparisonOptions}
-        schoolComparison={schoolComparison}
-        parkComparison={parkComparison}
-        universityComparison={universityComparison}
-        transportComparison={transportComparison}
-        getAreaDescription={(key) => getAreaDescription(key, geoData)}
-        getAreaSummary={(area, filters) =>
-          getAreaSummary(
-            area,
-            filters,
-            {
-              parkThresholds,
-              schoolThresholds,
-              universityThresholds,
-              transportThresholds,
-            },
-            minBudget,
-            maxBudget
-          )
-        }
-        getStatusLabel={getStatusLabel}
-        setSelectedKey={setSelectedKey}
-      />
-
-      <RightSidebar
-        filtersOpen={filtersOpen}
-        setFiltersOpen={setFiltersOpen}
-        minBudget={minBudget}
-        maxBudget={maxBudget}
-        setMinBudget={setMinBudget}
-        setMaxBudget={setMaxBudget}
-        activeFilters={activeFilters}
-        setActiveFilters={setActiveFilters}
-        amenityWeights={amenityWeights}
-        setAmenityWeights={setAmenityWeights}
-      />
-    </div>
-  );
-}
-
-
-
-/*
 
 import { useEffect, useState } from "react";
 import L from "leaflet";
@@ -351,7 +41,7 @@ function FitToFilteredData() {
 -----------------------------------------------------------------------------
 App() 
 -----------------------------------------------------------------------------
-
+*/
 
 export default function App() {
 
@@ -1076,14 +766,7 @@ export default function App() {
       }}
     >
 
-    */
-
       {/* Top bar */}
-
-      /*
-
-
-
       <div
         style={{
           position: "absolute",
@@ -1123,7 +806,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Map 
+      {/* Map */}
       <MapContainer
         center={[53.3498, -6.2603]}
         zoom={7}
@@ -1154,7 +837,7 @@ export default function App() {
         )}
       </MapContainer>
 
-      {/* Left insights panel 
+      {/* Left insights panel */}
       <div
         style={{
           position: "absolute",
@@ -1555,7 +1238,7 @@ export default function App() {
         </div>
       </div>
 
-      {/* Right filters sidebar 
+      {/* Right filters sidebar */}
       <div
         style={{
           position: "absolute",
@@ -1803,4 +1486,4 @@ export default function App() {
       </div>
     </div>
   );
-*} */
+}
