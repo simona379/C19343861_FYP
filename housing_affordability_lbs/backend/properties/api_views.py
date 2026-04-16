@@ -5,7 +5,7 @@ from rest_framework import status
 from .models import RoutingKeyDublinYearStat, RoutingKeyAmenities
 from .serializers import RoutingKeyDublinYearStatSerializer
 
-
+# backend API endpoint providing routing key housing statistics with integrated amenity counts
 class RoutingKeyList(APIView):
     def get(self, request):
         year = request.query_params.get("year")
@@ -47,7 +47,7 @@ class RoutingKeyList(APIView):
         serializer = RoutingKeyDublinYearStatSerializer(qs, many=True)
         return Response(serializer.data)
 
-
+# Backend API endpoint used to return detailed housing and amenity statistics for a selected routing key and year
 class RoutingKeyDetail(APIView):
     def get(self, request, routing_key):
         year = request.query_params.get("year")
