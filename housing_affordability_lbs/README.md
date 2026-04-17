@@ -1,29 +1,62 @@
 # Readme.md
 
+# myhousingmap.uk
+
 Simona Petrauskaite
 C19343861
 
-Interactive geospatial web application for analysing residential property markets
+Interactive geospatial decision-support system for analysing housing affordability and area suitability across Dublin.
 
-Available at: https://myhousingmap.uk
+Live system: https://myhousingmap.uk
 
 ⸻
 
 # Overview
 
-The Housing Affordability & Insights Map is an interactive web application built to help potential home buyers analyse residential property markets through:
-	•	Geospatial visualisation of properties
-	•	Price filtering & property type filtering
-	•	Amenity search (schools, public transport, parks)
-	•	User-driven polygon selection
-	•	PWA features (installable + offline cache)
-	•	Fully containerised production deployment
+This project presents a web-based data visualisation and analysis tool designed to support potential home buyers in exploring housing markets across Dublin.
 
-✔️ Full-stack development
-✔️ Data analysis & ingestion pipelines
-✔️ Geospatial processing (PostGIS, GeoDjango)
-✔️ Modern deployment with Docker, Nginx & HTTPS
-✔️ UX/UI engineering using Leaflet
+This system adopts an area-based analytical approach, aggregating housing and contextual data at the Eircode routing key level. This allows users to compare areas based on price trends, affordability and lifestyle factors.
+
+The application integrates geospatial visualisation with multi-criteria decision support, enabling users to:
+
+* Explore housing prices across areas using an interactive map
+* Analyse trends and transaction data over time
+* Filter areas based on budget constraints
+* Evaluate areas using weighted preferences (e.g., schools, parks, transport)
+* Compare results through rankings and visual analytics
+
+## Motivation
+
+Housing data is often complex and difficult to interpret at scale. This project aims to transform raw data into intuitive visual insights to support informed decision-making for potential buyers.
+
+⸻
+
+# Key Features
+
+## Geospatial Visualisation
+
+* Choropleth map of Dublin using routing key polygons
+* Colour-coded areas based on affordability and suitability
+* Interactive hover and click behaviour
+
+## Area-Based Analytics
+
+* Median property price per area
+* Transaction counts
+* Year-on-year price change
+* Time-series trend visualisation
+
+## Decision Support System
+
+* User-defined preferences (schools, parks, education, transport)
+* Weighted scoring system for area suitability
+* Real-time filtering and ranking of areas
+
+## Comparative Insights
+
+* Ranked list of best matching areas
+* Area comparison against city averages
+* Visual breakdown of strengths and weaknesses
 
 ⸻
 
@@ -31,17 +64,21 @@ The Housing Affordability & Insights Map is an interactive web application built
 
 Backend
 	•	Python 3.11
-	•	Django 5.2
+	•	Django 
 	•	Django REST Framework
 	•	GeoDjango
-	•	PostGIS
-	•	psycopg2
+	•	PostgreSQL + PostGIS
 
 Frontend
+	•	React (Vite)
+	•	React-Leaflet
+	•	Chart.js (analytics)
 	•	HTML, CSS, JavaScript
-	•	Leaflet.js
-	•	Service Worker (offline support)
-	•	PWA (Web App) Manifest
+
+Data Processing
+	•	Pandas
+	•	GeoPandas
+	•	Custom aggregation pipelines
 
 DevOps & Deployment
 	•	Docker & Docker Compose
@@ -49,16 +86,11 @@ DevOps & Deployment
 	•	DigitalOcean Droplet
 	•	HTTPS (Let’s Encrypt + Certbot)
 
-Data Processing
-	•	Pandas
-	•	GeoPandas
-	•	CSV → PostGIS ingestion via custom Django management command (import_ppr)
-
 ⸻
 
 # System Architecture
 
-Frontend (Leaflet, HTML, JS, PWA)
+Frontend (React, Leaflet)
 
         │
         
@@ -66,11 +98,11 @@ Django Backend (REST API, GeoDjango)
 
         │
         
-PostgreSQL + PostGIS Spatial Database
+PostgreSQL + PostGIS (Spatial Database)
 
         │
         
-Docker Compose (web + db services)
+Docker Containerised Service (web + db services)
 
         │
         
@@ -82,228 +114,115 @@ DigitalOcean Droplet (Production Deployment)
 
 ⸻
 
+# Data Model
+
+The system uses an area-level aggregation approach:
+
+* Spatial unit: Eircode Routing Keys (e.g., D06, D09)
+* Data aggregated per area:
+    * Median price
+    * Transaction count
+    * Year-on-year change
+    * Amenity counts
+
+This aggregation approach improves performance, reduces spatial noise, and enables clearer comparison between areas.
+
+⸻
+
 # Project Structure
 
-housing-app/
+housing_affordability_lbs/
 │
 ├── backend/
 │   ├── backend/              # Django project
-│   │   ├── settings.py
-│   │   ├── urls.py
-│   │   └── wsgi.py
-│   │
-│   ├── properties/           # Main application
-│   │   ├── management/
-│   │   │   └── commands/
-│   │   │       └── import_ppr.py   # CSV → DB importer
-│   │   ├── models.py
-│   │   ├── views.py
-│   │   ├── api.py
-│   │   ├── static/
-│   │   │   └── properties/
-│   │   │       ├── css/
-│   │   │       ├── js/
-│   │   │       └── icons/
-│   │   └── templates/
-│   │       └── properties/map.html
-│   │
-│   ├── Dockerfile
+│   ├── properties/           # Core app (models, API, aggregation)
+│   ├── data/
+│   │   └── spatial/          # GeoJSON boundaries
 │   ├── docker-compose.yml
+│   ├── Dockerfile
 │   └── requirements.txt
 │
-└── ppr_dublin.csv            # Property dataset
+├── frontend/
+│   ├── public/
+│   │   └── RoutingKeys_EIRE.geojson
+│   ├── src/
+│   │   ├── components/
+│   │   ├── utils/
+│   │   │   └── scoring.js    # Decision scoring logic
+│   │   └── App.jsx
+│   ├── package.json
+│   └── vite.config.js
+
+⸻
+ 
+# Core Functionality
+
+API Endpoints (examples)
+
+* /api/routing-keys/?year=2025
+* /api/routing-keys/<key>/trend/
+* /api/routing-keys/<key>/analysis/
+
+These endpoints provide aggregated and analytical data used to power the frontend visualisations.
 
 ⸻
 
-# Local Development Instructions
+# Decision Scoring System
 
-1. Clone the repository
-git clone https://github.com/<your-repo>/housing-app.git
-cd housing-app/backend
+A custom scoring algorithm evaluates each area based on:
 
-2. Set up a virtual environment
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+* Budget alignment
+* Amenity availability
+* User-defined weights
 
-3. Start PostGIS (local or Docker)
-brew install postgresql postgis
-docker-compose up database
+This produces:
 
-4. Apply migrations
-python manage.py migrate
-
-5. Import the property dataset
-python manage.py import_ppr ../ppr_dublin.csv
-
-6. Run the Django server
-python manage.py runserver
+* Suitability score (%)
+* Ranking across all areas
+* Interpretation of contributing factors
 
 ⸻
 
-# Docker Deployment (Local or Production)
+# Evaluation Focus
 
-1. Build & run containers
-docker-compose up -d --build
+The system is evaluated based on:
 
-This creates:
-service         port            description
-web             8000            Django server
-database        5433->5432      PostGis Database
-
-check running services
-docker-compose ps
+* Accuracy of aggregated housing data
+* Usability of the interface
+* Effectiveness of the decision-support functionality
+* Performance of spatial queries and API responses
 
 ⸻
 
-# Production Deployment (DigitalOcean)
+# Key Contributions
 
-Copy Project to Server
-scp -r housing-app root@<server-ip>:~/housing-app
-
-SSH into server
-ssh root@<server-ip>
-
-Start Docker in production
-cd housing-app/backend
-docker-compose up -d --build
+* Transition from property-level to area-level analysis
+* Integration of geospatial data with decision-support logic
+* Development of a multi-criteria ranking system
+* Full-stack implementation with real-world datasets
+* Deployment of a live, production-ready system
 
 ⸻
 
-# Nginx Reverse Proxy Configuration (port 80 -> 8000)
+# Final Deliverables
 
-File: /etc/nginx/sites-available/housing
-server {
-    listen 80;
-    server_name myhousingmap.uk www.myhousingmap.uk;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-}
-
-Enable config:
-ln -s /etc/nginx/sites-available/housing /etc/nginx/sites-enabled/
-nginx -t
-systemctl restart nginx
+* Live application: https://myhousingmap.uk
+* Full source code repository
+* Data processing and aggregation pipeline
+* Interactive geospatial visualisation system
+* Final report and documentation
 
 ⸻
 
-# HTTPS setup (Certbot & Lets Encrypt)
+# Development & Deployment
 
-Install
-apt install -y certbot python3-certbot-nginx
+## Using Docker
+* docker-compose up -d --build
 
-Obtain certificate
-certbot --nginx -d myhousingmap.uk -d www.myhousingmap.uk
+## Backend
+* python manage.py migrate
 
-⸻
-
-# Progressive Web App (PWA)
-
-Manifest File
-
-properties/static/properties/manifest.webmanifest
-
-Defines:
-	•	App name
-	•	Icons (192/512)
-	•	Start URL
-	•	Theme colour
-	•	Standalone display mode
-
-Service Worker
-
-properties/static/properties/js/service-worker.js
-
-Features:
-	•	Offline caching
-	•	Install prompts on supported browsers
-	•	Cache-first delivery for core assets
-
-⸻
-
-# Dataset Description
-
-Source: Dublin Residential Property Register
-Fields used:
-	•	Address
-	•	Price
-	•	Date
-	•	Latitude / Longitude
-	•	Property Type
-
-Converted to GeoJSON + PostGIS geometry (PointField).
-
-Imported via:
-python manage.py import_ppr ../ppr_dublin.csv
-
-⸻
-
-# Testing Checklist
-
-Map Features
-	•	Load all properties
-	•	Cluster colouring (low/mid/high price)
-	•	Standalone colour-coded markers
-	•	Drawing polygon to filter
-	•	Radius search (“Use My Location”)
-	•	Nearby amenities (schools, parks, transport) with custom colours
-	•	Summary boxes
-
-PWA Features
-	•	Manifest recognition
-	•	Service worker active
-	•	App installation
-	•	Reload offline behaviour using DevTools
-
-Backend & Deployment
-	•	Dockerised services
-	•	PostGIS spatial queries
-	•	HTTPS enforced
-	•	Custom management command for data import
-
-
-Backend & Database Verification:
-
-Task                                    Command
-All containers                          docker ps -a
-Only running containers                 docker ps
-App stack status                        docker-compose ps
-Check Django response                   curl -I http://localhost:8000/
-View logs                               docker-compose logs --tail=50 web
-
-⸻
-
-# This system has:
-
-	•	Full stack end-to-end web app development
-	•	Cloud deployment architecture
-	•	Integration of geospatial technologies (PostGIS, GeoDjango)
-    •	Docker containerisation for reproducible environments
-	•	A fully working production PWA
-	•	Secure, scalable architecture using containers
-	•	Geographic data analysis
-    •	Data ingestion and processing
-	•	Secure deployment (HTTPS, Nginx reverse proxy)
-	•	Interactive UX using Leaflet
-
-⸻
-
-# #Final Deliverables
-
-Project includes:
-	•	Working live deployment: https://myhousingmap.uk
-	•	Source code repository
-	•	README 
-    •	Fully containerised backend
-	•	CSV importer for dataset
-	•	PWA-enabled frontend
-	•	Production deployment on DigitalOcean (Docker + Nginx + HTTPS)
-
-⸻
+## Frontend
+* npm install
+* npm run dev
 
