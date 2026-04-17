@@ -691,25 +691,10 @@ export default function App() {
     const selectedWeight = amenityWeights[filterKey];
 
     return (
-      <div
-        style={{
-          marginTop: "8px",
-          marginLeft: "26px",
-          marginBottom: "4px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: "12px",
-            color: "#64748b",
-            marginBottom: "6px",
-            fontWeight: 600,
-          }}
-        >
-          How important is this?
-        </div>
+      <div className="weight-selector">
+        <div className="weight-selector-label">How important is this?</div>
 
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div className="weight-button-row">
           {[1, 2, 3].map((value) => {
             const isActive = selectedWeight === value;
 
@@ -729,19 +714,7 @@ export default function App() {
                     [filterKey]: value,
                   }))
                 }
-                style={{
-                  border: isActive ? "2px solid #0b2a4a" : "1px solid #cbd5e1",
-                  background: isActive ? "#0b2a4a" : "transparent",
-                  color: isActive? "white" : "#475569",
-                  borderRadius: "999px",
-                  padding: "6px 10px",
-                  minWidth: "60px",
-                  height: "30px",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                }}
+                className={`weight-button ${isActive ? "active" : ""}`}
               >
                 {labels[value]}
               </button>
@@ -920,15 +893,6 @@ export default function App() {
                       setSelectedKey(item.key);
                       setActivePanelTab("selected");
                       setPanelOpen(true);
-                    }}
-                    style={{
-                      border: "1px solid #e6e6e6",
-                      borderRadius: "12px",
-                      padding: "14px",
-                      cursor: "pointer",
-                      background: "white",
-                      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-                      transition: "all 0.15s ease",
                     }}
                   >
                     <div className="ranking-card-header">
