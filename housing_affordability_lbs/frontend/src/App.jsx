@@ -666,12 +666,7 @@ export default function App() {
     const isAbove = comparison.direction === "above";
 
     return (
-      <div
-        style={{
-          color: isAbove ? "#16a34a" : "#475569", // green or neutral
-          fontWeight: 600,
-        }}
-      >
+      <div className={'comparison-row $[isAbove ? "above" : "below"}'}>
         {label}: {isAbove ? "above average" : "below average"}
       </div>
     );
@@ -956,14 +951,13 @@ export default function App() {
                 <div className="analysis-stat-row">
                   <span>YoY Change</span>
                   <strong
-                    style={{
-                      color:
+                    className={
                         selectedArea?.yoy_percent > 0
-                          ? "#17a35b"
+                          ? "yoy-positive"
                           : selectedArea?.yoy_percent < 0
-                            ? "#dc2626"
-                            : "#374151",
-                    }}
+                            ? "yoy-negative"
+                            : "yoy-neutral"
+                    }
                   >
                     {selectedArea?.yoy_percent != null
                       ? `${selectedArea.yoy_percent}%`
@@ -1002,9 +996,7 @@ export default function App() {
                   {trendData.length > 0 ? (
                     <Line data={chartData} options={chartOptions} />
                   ) : (
-                    <div style={{ color: "#94a3b8", fontSize: "14px" }}>
-                      No trend data available
-                    </div>
+                    <div className="empty-state-text">No trend data available</div>
                   )}
                 </div>
               </div>
@@ -1021,7 +1013,7 @@ export default function App() {
                   {selectedArea ? (
                     <Bar data={amenityComparisonData} options={amenityComparisonOptions} />
                   ) : (
-                    <div style={{ color: "#94a3b8", fontSize: "14px" }}>
+                    <div className="empty-state-text">
                       Select an area to view amenity comparison
                     </div>
                   )}
@@ -1052,7 +1044,7 @@ export default function App() {
 
             <div className="sidebar-section-title">Budget Range</div>
 
-            <div style={{ display: "grid", gap: "10px", marginBottom: "18px" }}>
+            <div className="slider-group">
               <input
                 type="range"
                 min="200000"
