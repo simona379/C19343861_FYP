@@ -774,7 +774,7 @@ export default function App() {
 
         className="map-frame"
       >
-        
+
         <TileLayer
           attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -797,120 +797,45 @@ export default function App() {
       </MapContainer>
 
       {/* Left insights panel */}
-      <div
-        style={{
-          position: "absolute",
-          top: "72px",
-          left: 0,
-          width: "380px",
-          height: "calc(100% - 72px)",
-          background: "white",
-          zIndex: 1200,
-          boxShadow: "4px 0 20px rgba(0,0,0,0.18)",
-          transform: panelOpen ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 0.3s ease",
-          overflowY: "auto",
-          pointerEvents: panelOpen ? "auto" : "none",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "18px 20px",
-            borderBottom: "1px solid #e6e6e6",
-          }}
-        >
-          <div style={{ fontSize: "18px", fontWeight: 700, color: "#1f2d3d" }}>
-            Selected Area
-          </div>
+      <div className={`left-panel ${panelOpen ? "open" : "closed"}`}>
 
-          <button
-            onClick={() => setPanelOpen(false)}
-            style={{
-              border: "none",
-              background: "transparent",
-              fontSize: "22px",
-              cursor: "pointer",
-              color: "#667085",
-            }}
-          >
+        <div className="panel-header">
+          <div className="panel-title">Selected Area</div>
+
+          <button onClick={() => setPanelOpen(false)} className="close-btn">
             x
           </button>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            gap: "8px",
-            padding: "16px 20px 0 20px",
-          }}
-        >
-          <button
+        <div className="panel-tabs">
+
+         <button
             onClick={() => setActivePanelTab("selected")}
-            style={{
-              border: "none",
-              borderRadius: "10px",
-              padding: "8px 12px",
-              fontWeight: 700,
-              cursor: "pointer",
-              background: activePanelTab === "selected" ? "#0b2a4a" : "#e5e7eb",
-              color: activePanelTab === "selected" ? "white" : "#1f2d3d",
-            }}
+            className={`panel-tab-btn ${activePanelTab === "selected" ? "active" : ""}`}
           >
             Summary
           </button>
 
           <button
             onClick={() => setActivePanelTab("rankings")}
-            style={{
-              border: "none",
-              borderRadius: "10px",
-              padding: "8px 12px",
-              fontWeight: 700,
-              cursor: "pointer",
-              background: activePanelTab === "rankings" ? "#0b2a4a" : "#e5e7eb",
-              color: activePanelTab === "rankings" ? "white" : "#1f2d3d",
-            }}
+            className={`panel-tab-btn ${activePanelTab === "rankings" ? "active" : ""}`}
           >
             Rankings
           </button>
 
           <button
             onClick={() => setActivePanelTab("analysis")}
-            style={{
-              border: "none",
-              borderRadius: "10px",
-              padding: "8px 12px",
-              fontWeight: 700,
-              cursor: "pointer",
-              background: activePanelTab === "analysis" ? "#0b2a4a" : "#e5e7eb",
-              color: activePanelTab === "analysis" ? "white" : "#1f2d3d",
-            }}
+            className={`panel-tab-btn ${activePanelTab === "analysis" ? "active" : ""}`}
           >
             Analysis
           </button>
         </div>
 
+        <div className="panel-body">
 
-
-        <div style={{ padding: "24px" }}>
           {activePanelTab === "selected" && (
             <>
-              <div
-                style={{
-                  display: "inline-block",
-                  background: "#f4dd45",
-                  borderRadius: "10px",
-                  padding: "6px 10px",
-                  fontWeight: 700,
-                  fontSize: "15px",
-                  marginBottom: "16px",
-                }}
-              >
-                {selectedKey || "—"}
-              </div>
+              <div className="selected-key-badge">{selectedKey || "—"}</div>
 
               <div style={{ fontSize: "28px", fontWeight: 800, marginBottom: "6px" }}>
                 {selectedKey ? getAreaDescription(selectedKey) : "—"}
