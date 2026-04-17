@@ -14,6 +14,8 @@ shapely>=2.0
 pyproj>=3.6
 geopy>=2.4
 
+gunicorn
+
 # Optional (used in notebook analysis of dataset)
 #pandas>=2.2
 #numpy>=1.26
