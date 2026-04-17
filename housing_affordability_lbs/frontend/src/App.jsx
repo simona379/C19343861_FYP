@@ -15,6 +15,13 @@ import {
 } from "chart.js";
 import { Line, Bar } from "react-chartjs-2";
 
+import {
+  getThresholds,
+  scoreAmenity,
+  getBudgetScore,
+  classifyArea
+} from "./utils/scoring";
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -147,6 +154,7 @@ export default function App() {
 
   // -------------------------------------------------------------------------
   // Relative threshold helpers for amenity scoring
+  /*
   function getThresholds(values) {
     const cleaned = values
       .map((v) => Number(v))
@@ -165,6 +173,7 @@ export default function App() {
       strong: cleaned[Math.min(strongIndex, cleaned.length -1)],
     };
   }
+    */
 
   // Thresholds 
   const parkThresholds = getThresholds(
@@ -184,6 +193,7 @@ export default function App() {
   );
 
   // scoring helper
+  /*
   function scoreAmenity(value, thresholds) {
     const numericValue = Number(value ?? 0);
 
@@ -213,6 +223,7 @@ export default function App() {
     return 0;
 
   }
+
 
   // Classification Function
   function classifyArea(area, filters) {
@@ -288,11 +299,25 @@ export default function App() {
     return { status: "outside-range", score: finalScore };
 
   }
+      */
 
   // Ranked area scoring system
   const rankedAreas = Object.entries(stats)
     .map(([key, area]) => {
-      const result = classifyArea(area, activeFilters);
+      //const result = classifyArea(area, activeFilters);
+      const result = classifyArea({
+        area,
+        filters: activeFilters,
+        thresholds: {
+          schools: schoolThresholds,
+          parks: parkThresholds,
+          universities: universityThresholds,
+          transport: railTramThresholds,
+        },
+        weights: amenityWeights,
+        minBudget,
+        maxBudget,
+      });
       return {
         key,
         area,
@@ -321,7 +346,20 @@ export default function App() {
   const style = (feature) => {
     const key = String(feature.properties.RoutingKey).trim().toUpperCase();
     const area = stats[key];
-    const result = classifyArea(area, activeFilters);
+    //const result = classifyArea(area, activeFilters);
+    const result = classifyArea({
+      area,
+      filters: activeFilters,
+      thresholds: {
+        schools: schoolThresholds,
+        parks: parkThresholds,
+        universities: universityThresholds,
+        transport: railTramThresholds,
+      },
+      weights: amenityWeights,
+      minBudget,
+      maxBudget,
+    });
 
     const isSelected = key === selectedKey;
 
@@ -405,7 +443,20 @@ export default function App() {
 
     });
 
-    const result = classifyArea(area, activeFilters);
+    //const result = classifyArea(area, activeFilters);
+    const result = classifyArea({
+      area,
+      filters: activeFilters,
+      thresholds: {
+        schools: schoolThresholds,
+        parks: parkThresholds,
+        universities: universityThresholds,
+        transport: railTramThresholds,
+      },
+      weights: amenityWeights,
+      minBudget,
+      maxBudget,
+    });
 
     layer.bindTooltip(
       `
@@ -666,7 +717,7 @@ export default function App() {
     const isAbove = comparison.direction === "above";
 
     return (
-      <div className={`comparison-row $[isAbove ? "above" : "below"}`}>
+      <div className={`comparison-row ${isAbove ? "above" : "below"}`}>
         {label}: {isAbove ? "above average" : "below average"}
       </div>
     );
@@ -680,7 +731,20 @@ export default function App() {
     return "No data";
   }
 
-  const selectedResult = classifyArea(selectedArea, activeFilters);
+  //const selectedResult = classifyArea(selectedArea, activeFilters);
+  const selectedResult = classifyArea({
+    area: selectedArea,
+    filters: activeFilters,
+    thresholds: {
+      schools: schoolThresholds,
+      parks: parkThresholds,
+      universities: universityThresholds,
+      transport: railTramThresholds,
+    },
+    weights: amenityWeights,
+    minBudget,
+    maxBudget,
+  });
 
   function renderWeightSelector(filterKey, label) {
     const selectedWeight = amenityWeights[filterKey];
