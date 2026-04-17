@@ -3,12 +3,13 @@ __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-*.sqlite3
 *.pyc
 
 # Virtual environments
 venv/
-.env/
+.env
+.env.local
+**/.env
 .envrc
 *.egg-info/
 .eggs/
@@ -26,9 +27,10 @@ media/
 # Docker
 *.pid
 *.seed
-*.log
 # If Docker volume exports etc:
 docker-volume/
+docker-data/
+
 
 # Mac OS
 .DS_Store
@@ -42,4 +44,3 @@ docker-volume/
 backend/data/raw/
 backend/data/processed/
 backend/data/tmp/
-backend/data/spatial/*.geojson
