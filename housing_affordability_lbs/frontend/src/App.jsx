@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import L from "leaflet";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
@@ -837,37 +836,31 @@ export default function App() {
             <>
               <div className="selected-key-badge">{selectedKey || "—"}</div>
 
-              <div style={{ fontSize: "28px", fontWeight: 800, marginBottom: "6px" }}>
+              <div className="selected-area-name">
                 {selectedKey ? getAreaDescription(selectedKey) : "—"}
               </div>
 
-              <div style={{ fontSize: "42px", letterSpacing: "-1px", fontWeight: 800, marginBottom: "4px", color: "#0b2a4a" }}>
+              <div className="selected-score">
                 {(selectedResult.score * 100).toFixed(0)}%
               </div>
 
-              <div style={{ fontSize: "14px", fontWeight: 700, color: "#475569", marginBottom: "6px" }}>
+              <div className="selected-status">
                 {getStatusLabel(selectedResult.status)}
               </div>
 
-              <div style={{ fontSize: "16px", color: "#64748b", marginTop: "18px", marginBottom: "18px" }}>
-                Overall suitability score
-              </div>
+              <div className="section-subtext">Overall suitability score</div>
 
-              <div style={{ fontSize: "17px", letterSpacing: "-0.2px", fontWeight: 700, marginTop: "18px", marginBottom: "8px" }}>
-                Why this area matches
-              </div>
+              <div className="section-heading">Why this area matches</div>
 
-              <div style={{ display: "grid", gap: "8px", fontSize: "14px", marginBottom: "20px" }}>
+              <div className="summary-grid">
                 {getAreaSummary(selectedArea, activeFilters).map((line, idx) => (
                   <div key={idx}>{line}</div>
                 ))}
               </div>
 
-              <div style={{ fontSize: "17px", letterSpacing: "-0.2px", fontWeight: 700, marginTop: "18px", marginBottom: "14px" }}>
-                Compared to other areas
-              </div>
+              <div className="section-heading-wide">Compared to other areas</div>
 
-              <div style={{ display: "grid", gap: "6px", fontSize: "14px", marginBottom: "16px" }}>
+              <div className="comparison-grid">
                 {activeFilters.schools && (
                   <ComparisonRow label="Schools" comparison={schoolComparison} />
                 )}
@@ -885,7 +878,7 @@ export default function App() {
                 )}
               </div>
 
-              <div style={{ fontSize: "12px", color: "#475569", marginTop: "10px", lineHeight: 1.5 }}>
+              <div className="meta-text">
                 <div>
                   <strong>Selected criteria:</strong>{" "}
                   {[
@@ -899,7 +892,7 @@ export default function App() {
                     .join(", ")}
                 </div>
 
-                <div style={{ marginTop: "4px" }}>
+                <div className="meta-text-spacer">
                   <strong>Priority levels:</strong>{" "}
                   {[
                     activeFilters.schools && `Schools ${amenityWeights.schools === 1 ? "Low" : amenityWeights.schools === 2 ? "Medium" : "High"}`,
@@ -916,11 +909,9 @@ export default function App() {
 
           {activePanelTab === "rankings" && (
             <>
-              <div style={{ fontSize: "24px", fontWeight: 800, marginBottom: "18px" }}>
-                Best Matching Areas
-              </div>
+              <div className="rankings-title">Best Matching Areas</div>
 
-              <div style={{ display: "grid", gap: "12px" }}>
+              <div className="rankings-grid">
                 {rankedAreas.map((item, index) => (
                   <div
                     key={item.key}
@@ -940,50 +931,36 @@ export default function App() {
                       transition: "all 0.15s ease",
                     }}
                   >
-                    <div 
-                      style={{ 
-                        display: "flex", 
-                        justifyContent: "space-between", 
-                        alignItems: "flex-start",
-                        marginBottom: "8px",
-                        gap: "12px",
-                      }}
-                    >
+                    <div className="ranking-card-header">
                       <div>
-                        <div style={{ fontWeight: 800, fontSize: "18px", lineHeight: 1.2 }}>
+                        <div className="ranking-card-title">
                           #{index + 1}. {getAreaDescription(item.key)}
                         </div>
-                        <div style={{ fontSize: "13px", color: "#64748b", marginTop: "2px" }}>
-                          {item.key}
-                        </div>
+                        <div className="ranking-card-key">{item.key}</div>
                       </div>
 
 
                       <span
-                        style={{
-                          fontSize: "13px",
-                          fontWeight: 700,
-                          whiteSpace: "nowrap",
-                          color:
-                            item.status === "best-match"
-                              ? "#16a34a"
-                              : item.status === "close-match"
-                                ? "#f59e0b"
-                                : "#dc2626",
-                        }}
+                        className={`ranking-card-status ${
+                          item.status === "best-match"
+                            ? "best"
+                            : item.status === "close-match"
+                            ? "close"
+                            : "bad"
+                        }`}
                       >
                         {item.status === "best-match"
                           ? "Best match"
                           : item.status === "close-match"
-                            ? "Close match"
-                            : "Not suitable"}
+                          ? "Close match"
+                          : "Not suitable"}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: "14px", color: "#475569" }}>
+                    <div className="ranking-card-meta">
                       Median price: €{item.area.median_price.toLocaleString()}
                     </div>
-                    <div style={{ fontSize: "14px", color: "#475569" }}>
+                    <div className="ranking-card-meta">
                       Score: {(item.score * 100).toFixed(0)}%
                     </div>
                   </div>
@@ -995,12 +972,10 @@ export default function App() {
 
           {activePanelTab === "analysis" && (
             <>
-              <div style={{ fontSize: "24px", fontWeight: 800, marginBottom: "18px" }}>
-                Area Insights
-              </div>
+              <div className="analysis-title">Area Insights</div>
 
-              <div style={{ display: "grid", gap: "18px", marginBottom: "28px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+              <div className="analysis-stat-list">
+                <div className="analysis-stat-row">
                   <span>Median Price</span>
                   <strong>
                     {selectedArea?.median_price
@@ -1009,12 +984,12 @@ export default function App() {
                   </strong>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                <div className="analysis-stat-row">
                   <span>Transactions</span>
                   <strong>{selectedArea?.transactions || "—"}</strong>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                <div className="analysis-stat-row">
                   <span>YoY Change</span>
                   <strong
                     style={{
@@ -1032,49 +1007,34 @@ export default function App() {
                   </strong>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                <div className="analysis-stat-row">
                   <span>Parks</span>
                   <strong>{selectedArea?.park_count ?? 0}</strong>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                <div className="analysis-stat-row">
                   <span>Schools</span>
                   <strong>{selectedArea?.school_count ?? 0}</strong>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                <div className="analysis-stat-row">
                   <span>Higher Education</span>
                   <strong>{selectedArea?.university_count ?? 0}</strong>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "18px" }}>
+                <div className="analysis-stat-row">
                   <span>DART / Luas Access</span>
                   <strong>{selectedArea?.rail_tram_count ?? 0}</strong>
                 </div>
               </div>
 
-              <div style={{
-                background: "#fcfcfd",
-                borderRadius: "12px",
-                padding: "14px",
-                border: "1px solid #eef2f7",
-              }}>
+              <div className="chart-card">
 
-                <div style={{ fontSize: "22px", fontWeight: 700, marginBottom: "14px" }}>
-                  Price Trend
-                </div>
+                <div className="chart-title">Price Trend</div>
 
-                <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "6px" }}>
-                  Median price over time
-                </div>
+                <div className="chart-subtext-tight">Median price over time</div>
 
-                <div
-                  style={{
-                    height: "260px",
-                    borderTop: "1px solid #e6e6e6",
-                    paddingTop: "14px",
-                  }}
-                >
+                <div className="chart-area price-chart-area">
                   {trendData.length > 0 ? (
                     <Line data={chartData} options={chartOptions} />
                   ) : (
@@ -1085,28 +1045,15 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{
-                background: "#fcfcfd",
-                borderRadius: "12px",
-                padding: "14px",
-                border: "1px solid #eef2f7",
-              }}>
+              <div className="chart-card chart-card-spaced">
 
-                <div style={{ fontSize: "22px", fontWeight: 700, marginTop: "0px", marginBottom: "14px" }}>
-                  Amenity Comparison
-                </div>
+                <div className="chart-title">Amenity Comparison</div>
 
-                <div style={{ fontSize: "13px", color: "#64748b", marginBottom: "10px" }}>
+                <div className="chart-subtext">
                   Selected area compared with the average across all routing key areas
                 </div>
 
-                <div
-                  style={{
-                    height: "280px",
-                    borderTop: "1px solid #e6e6e6",
-                    paddingTop: "14px",
-                  }}
-                >
+                <div className="chart-area amenity-chart-area">
                   {selectedArea ? (
                     <Bar data={amenityComparisonData} options={amenityComparisonOptions} />
                   ) : (
