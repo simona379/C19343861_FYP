@@ -666,7 +666,7 @@ export default function App() {
     const isAbove = comparison.direction === "above";
 
     return (
-      <div className={'comparison-row $[isAbove ? "above" : "below"}'}>
+      <div className={`comparison-row $[isAbove ? "above" : "below"}`}>
         {label}: {isAbove ? "above average" : "below average"}
       </div>
     );
