@@ -17,9 +17,11 @@ import { Line, Bar } from "react-chartjs-2";
 
 import {
   getThresholds,
-  scoreAmenity,
-  getBudgetScore,
-  classifyArea
+  //scoreAmenity,
+  //getBudgetScore,
+  classifyArea,
+  getComparison,
+  getAreaSummary
 } from "./utils/scoring";
 
 ChartJS.register(
@@ -533,6 +535,8 @@ export default function App() {
     return values.reduce((sum, value) => sum + value, 0) / values.length;
   };
 
+  /*
+
   // helper above/below averages indicators 
   function getComparison(value, average) {
     if (!average || average === 0) return null;
@@ -544,6 +548,8 @@ export default function App() {
       direction: diffPercent >= 0 ? "above" : "below",
     };
   };
+
+  */
 
   const averageSchools = averageOf("school_count");
   const averageParks = averageOf("park_count");
@@ -626,6 +632,7 @@ export default function App() {
 
   // -------------------------------------------------------------------------
   // Summary Explanation Function
+  /*
   function getAreaSummary(area, filters) {
     if (!area) return [];
 
@@ -679,6 +686,7 @@ export default function App() {
 
     return summary;
   };
+  */
 
   // ------------------------------------------------------------------------- 
   //NAmes for routing keys
@@ -885,7 +893,19 @@ export default function App() {
               <div className="section-heading">Why this area matches</div>
 
               <div className="summary-grid">
-                {getAreaSummary(selectedArea, activeFilters).map((line, idx) => (
+                {/* {getAreaSummary(selectedArea, activeFilters).map((line, idx) => ( */}
+                  {getAreaSummary({
+                    area: selectedArea,
+                    filters: activeFilters,
+                    thresholds: {
+                      schools: schoolThresholds,
+                      parks: parkThresholds,
+                      universities: universityThresholds,
+                      transport: railTramThresholds,
+                    },
+                    minBudget,
+                    maxBudget,
+                  }).map((line, idx) => (
                   <div key={idx}>{line}</div>
                 ))}
               </div>

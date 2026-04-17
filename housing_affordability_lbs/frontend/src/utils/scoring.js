@@ -131,3 +131,82 @@ export function classifyArea({
 
   return { status: "outside-range", score: finalScore };
 }
+
+// -----------------------------
+// Comparison Analysis
+// -----------------------------
+
+export function getComparison(value, average) {
+  if (!average || average === 0) return null;
+
+  const diffPercent = ((value - average) / average) * 100;
+
+  return {
+    percent: Math.abs(diffPercent).toFixed(0),
+    direction: diffPercent >= 0 ? "above" : "below",
+  };
+}
+
+// -----------------------------
+// Area Summary Analysis
+// -----------------------------
+
+export function getAreaSummary({
+  area,
+  filters,
+  thresholds,
+  minBudget,
+  maxBudget,
+}) {
+  if (!area) return [];
+
+  const summary = [];
+
+  // Budget
+  if (filters.budget) {
+    const price = Number(area.median_price ?? 0);
+    if (price >= minBudget && price <= maxBudget) {
+      summary.push("✔ Within budget");
+    } else {
+      summary.push("✖ Outside budget");
+    }
+  }
+
+  // Schools
+  if (filters.schools) {
+    if ((area.school_count ?? 0) >= thresholds.schools.strong) {
+      summary.push("✔ Strong school access");
+    } else {
+      summary.push("✖ Limited school access");
+    }
+  }
+
+  // Parks
+  if (filters.parks) {
+    if ((area.park_count ?? 0) >= thresholds.parks.strong) {
+      summary.push("✔ Good park access");
+    } else {
+      summary.push("✖ Limited parks");
+    }
+  }
+
+  // Universities
+  if (filters.universities) {
+    if ((area.university_count ?? 0) >= thresholds.universities.strong) {
+      summary.push("✔ Strong higher education access");
+    } else {
+      summary.push("✖ Limited higher education access");
+    }
+  }
+
+  // Transport
+  if (filters.transport) {
+    if ((area.rail_tram_count ?? 0) >= thresholds.transport.strong) {
+      summary.push("✔ Strong transport links");
+    } else {
+      summary.push("✖ Limited transport");
+    }
+  }
+
+  return summary;
+}
