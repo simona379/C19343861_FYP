@@ -13,6 +13,7 @@ from rest_framework.test import APIClient
 from unittest.mock import patch
 
 from .models import RoutingKeyDublinYearStat, RoutingKeyAmenities
+from .serializers import RoutingKeyDublinYearStatSerializer
 
 
 class MockOrderedResult:
@@ -322,3 +323,71 @@ class RoutingKeyApiTests(TestCase):
         self.assertEqual(data[0]["transactions"], 4)
         self.assertIsNone(data[0]["yoy_percent"])
 
+from django.test import TestCase
+from .models import RoutingKeyDublinYearStat
+from .serializers import RoutingKeyDublinYearStatSerializer
+
+# -----------------------------
+# RoutingKeySerializer tests
+# -----------------------------
+
+class RoutingKeySerializerTests(TestCase):
+
+    def test_serializer_includes_injected_amenity_fields(self):
+        # Arrange
+        obj = RoutingKeyDublinYearStat(
+            year=2025,
+            routing_key="A94",
+            transactions=593,
+            median_price=820000,
+            yoy_percent=21.48,
+        )
+
+        # Inject fields manually (same as your view does)
+        obj.park_count = 10
+        obj.school_count = 20
+        obj.university_count = 3
+        obj.rail_tram_count = 5
+
+        # Act
+        data = RoutingKeyDublinYearStatSerializer(obj).data
+
+        # Assert
+        self.assertEqual(data["park_count"], 10)
+        self.assertEqual(data["school_count"], 20)
+        self.assertEqual(data["university_count"], 3)
+        self.assertEqual(data["rail_tram_count"], 5)
+
+
+    def test_serializer_contains_all_expected_fields(self):
+        # Arrange
+        obj = RoutingKeyDublinYearStat(
+            year=2025,
+            routing_key="A94",
+            transactions=593,
+            median_price=820000,
+            yoy_percent=None,
+        )
+
+        obj.park_count = 0
+        obj.school_count = 0
+        obj.university_count = 0
+        obj.rail_tram_count = 0
+
+        # Act
+        data = RoutingKeyDublinYearStatSerializer(obj).data
+
+        # Assert
+        expected_fields = {
+            "year",
+            "routing_key",
+            "transactions",
+            "median_price",
+            "yoy_percent",
+            "park_count",
+            "school_count",
+            "university_count",
+            "rail_tram_count",
+        }
+
+        self.assertEqual(set(data.keys()), expected_fields)
