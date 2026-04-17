@@ -1123,63 +1123,23 @@ export default function App() {
       </div>
 
       {/* Right filters sidebar */}
-      <div
-        style={{
-          position: "absolute",
-          top: "72px",
-          right: 0,
-          width: filtersOpen ? "300px" : "64px",
-          height: "calc(100% - 72px)",
-          background: "white",
-          zIndex: 1100,
-          boxShadow: "-4px 0 20px rgba(0,0,0,0.15)",
-          transition: "width 0.3s ease",
-          overflow: "auto",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "18px 20px",
-            borderBottom: "1px solid #e6e6e6",
-          }}
-        >
-          {filtersOpen && (
-            <div style={{ fontSize: "18px", fontWeight: 700, color: "#1f2d3d" }}>
-              Filters
-            </div>
-          )}
+      <div className={`right-sidebar ${filtersOpen ? "open" : "closed"}`}>
+
+        <div className="panel-header">
+          {filtersOpen && <div className="panel-title">Filters</div>}
 
           <button
             onClick={() => setFiltersOpen(!filtersOpen)}
-            style={{
-              border: "none",
-              background: "transparent",
-              fontSize: "20px",
-              cursor: "pointer",
-              color: "#667085",
-              marginLeft: "auto",
-            }}
+            className="sidebar-toggle-btn"
           >
             ☰
           </button>
         </div>
 
         {filtersOpen && (
-          <div
-            style={{
-              padding: "16px 20px",
-              overflowY: "auto",
-              height: "calc(100% - 65px)",
-            }}
-          >
-            <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px" }}>
-              Budget Range
-            </div>
+          <div className="sidebar-body">
+
+            <div className="sidebar-section-title">Budget Range</div>
 
             <div style={{ display: "grid", gap: "10px", marginBottom: "18px" }}>
               <input
@@ -1207,40 +1167,20 @@ export default function App() {
               />
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                fontSize: "14px",
-                fontWeight: 600,
-                color: "#374151",
-                marginBottom: "20px",
-              }}
-            >
+            <div className="range-values">
               <span>€{(minBudget / 1000).toFixed(0)}k</span>
               <span>€{(maxBudget / 1000).toFixed(0)}k</span>
             </div>
 
-            <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "12px" }}>
-              Preferences
-            </div>
+            <div className="sidebar-section-title">Preferences</div>
 
-              <div style={{
-                fontSize: "11px",
-                color: "#94a3b8",
-                marginTop: "4px",
-                marginBottom: "12px"
-              }}>
+              <div className="sidebar-helper-text">
                 Higher importance = stronger influence on results
               </div>
 
-              <div style={{ 
-                padding: "12px",
-                borderRadius: "10px",
-                background: "#f8fafc",
-                marginBottom: "12px" 
-              }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+              <div className="filter-card">
+
+                <label className="filter-label">
                   <input
                     type="checkbox"
                     checked={activeFilters.schools}
@@ -1258,13 +1198,9 @@ export default function App() {
                 {activeFilters.schools && renderWeightSelector("schools", "Schools")}
               </div>
 
-              <div style={{ 
-                padding: "12px",
-                borderRadius: "10px",
-                background: "#f8fafc",
-                marginBottom: "12px" 
-              }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+              <div className="filter-card">
+
+                <label className="filter-label">
                   <input
                     type="checkbox"
                     checked={activeFilters.parks}
@@ -1282,13 +1218,9 @@ export default function App() {
                 {activeFilters.parks && renderWeightSelector("parks", "Parks")}
               </div>
 
-              <div style={{ 
-                padding: "12px",
-                borderRadius: "10px",
-                background: "#f8fafc",
-                marginBottom: "12px" 
-              }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+              <div className="filter-card">
+
+                <label className="filter-label">
                   <input
                     type="checkbox"
                     checked={activeFilters.universities}
@@ -1306,13 +1238,9 @@ export default function App() {
                 {activeFilters.universities && renderWeightSelector("universities", "Higher education")}
               </div>
 
-              <div style={{ 
-                padding: "12px",
-                borderRadius: "10px",
-                background: "#f8fafc",
-                marginBottom: "12px" 
-              }}>
-                <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+              <div className="filter-card">
+
+                <label className="filter-label">
                   <input
                     type="checkbox"
                     checked={activeFilters.transport}
@@ -1330,39 +1258,26 @@ export default function App() {
                 {activeFilters.transport && renderWeightSelector("transport", "DART / Luas access")}
               </div>
 
-            <div style={{ fontWeight: 700, fontSize: "14px", marginBottom: "14px" }}>
-              Score guide
-            </div>
+            <div className="sidebar-section-title">Score guide</div>
 
-            <div style={{ display: "grid", gap: "8px", marginBottom: "16px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#16a34a", display: "inline-block" }} />
+            <div className="score-guide">
+              <div className="score-guide-item">
+                <span className="score-dot best" />
                 Best match (80-100%)
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#f59e0b", display: "inline-block" }} />
+
+              <div className="score-guide-item">
+                <span className="score-dot close" />
                 Close match (40-79%)
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
-                <span style={{ width: "14px", height: "14px", borderRadius: "50%", background: "#dc2626", display: "inline-block" }} />
+
+              <div className="score-guide-item">
+                <span className="score-dot bad" />
                 Not suitable (0-39%)
               </div>
             </div>
 
-            <button
-              style={{
-                width: "100%",
-                background: "#cbd5e1",
-                color: "#475569",
-                border: "none",
-                borderRadius: "10px",
-                padding: "9px 12px",
-                fontSize: "13px",
-                fontWeight: 700,
-                cursor: "not-allowed",
-              }}
-              disabled
-            >
+            <button className="disabled-btn" disabled>
               Filters update automatically
             </button>
           </div>
