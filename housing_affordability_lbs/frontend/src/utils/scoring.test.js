@@ -23,6 +23,20 @@ describe("getThresholds", () => {
   it("handles a single value", () => {
     expect(getThresholds([7])).toEqual({ close: 7, strong: 7 });
   });
+
+  it("handles repeated values consistently", () => {
+    expect(getThresholds([5, 5, 5, 5])).toEqual({
+        close: 5,
+        strong: 5,
+    });
+  });
+
+  it("sorts unsorted numeric input correctly", () => {
+    expect(getThresholds([30, 10, 20])).toEqual({
+        close: 20,
+        strong: 30,
+    });
+  });
 });
 
 describe("scoreAmenity", () => {
@@ -165,6 +179,108 @@ describe("classifyArea", () => {
     expect(result.status).toBe("outside-range");
     expect(result.score).toBeLessThan(0.4);
   });
+
+  it("gives budget stronger influence than a single amenity when budget fails", () => {
+    const result = classifyArea({
+        area: {
+            median_price: 900000, // outside budget
+            school_count: 25,     // strong schools
+            park_count: 0,
+            university_count: 0,
+            rail_tram_count: 0,
+        },
+        filters: {
+            budget: true,
+            schools: true,
+            parks: false,
+            universities: false,
+            transport: false,
+        },
+        thresholds,
+        weights: {
+            schools: 2,
+            parks: 2,
+            universities: 2,
+            transport: 2,
+        },
+        minBudget: 500000,
+        maxBudget: 750000,
+    });
+
+    expect(result.status).toBe("outside-range");
+  });
+
+  it("classifies exactly 0.8 as best-match", () => {
+    const result = classifyArea({
+        area: {
+            median_price: 600000, // budget score = 1 with weight 4
+            school_count: 10,     // close only = 0.5 with weight 1
+            park_count: 0,
+            university_count: 0,
+            rail_tram_count: 0,
+        },
+        filters: {
+            budget: true,
+            schools: true,
+            parks: false,
+            universities: false,
+            transport: false,
+        },
+        thresholds: {
+            schools: { close: 10, strong: 20 },
+            parks: { close: 5, strong: 10 },
+            universities: { close: 1, strong: 3 },
+            transport: { close: 2, strong: 4 },
+        },
+        weights: {
+            schools: 1,
+            parks: 2,
+            universities: 2,
+            transport: 2,
+        },
+        minBudget: 500000,
+        maxBudget: 750000,
+    });
+
+    expect(result.score).toBe(0.8);
+    expect(result.status).toBe("best-match");
+  });
+
+  it("classifies exactly 0.4 as close-match", () => {
+    const result = classifyArea({
+        area: {
+            median_price: 900000, // budget = 0
+            school_count: 10,     // 0.5
+            park_count: 0,        // 0
+            university_count: 0,
+            rail_tram_count: 0,
+        },
+        filters: {
+            budget: true,
+            schools: true,
+            parks: false,
+            universities: false,
+            transport: false,
+        },
+        thresholds: {
+            schools: { close: 10, strong: 20 },
+            parks: { close: 5, strong: 10 },
+            universities: { close: 1, strong: 3 },
+            transport: { close: 2, strong: 4 },
+        },
+        weights: {
+            schools: 4,
+            parks: 2,
+            universities: 2,
+            transport: 2,
+        },
+        minBudget: 500000,
+        maxBudget: 750000,
+    });
+
+    expect(result.score).toBe(0.4);
+    expect(result.status).toBe("close-match");
+  });
 });
 
 describe("getComparison", () => {
@@ -263,4 +379,60 @@ describe("getAreaSummary", () => {
     expect(result).toContain("✖ Limited higher education access");
     expect(result).toContain("✖ Limited transport");
   });
+
+  it("respects active filters and only returns messages for enabled criteria", () => {
+  const result = getAreaSummary({
+    area: {
+      median_price: 600000,
+      school_count: 25,
+      park_count: 2,
+      university_count: 0,
+      rail_tram_count: 0,
+    },
+    filters: {
+      budget: true,
+      schools: true,
+      parks: false,
+      universities: false,
+      transport: false,
+    },
+    thresholds,
+    minBudget: 500000,
+    maxBudget: 750000,
+  });
+
+  expect(result).toContain("✔ Within budget");
+  expect(result).toContain("✔ Strong school access");
+  expect(result).not.toContain("✖ Limited parks");
+  expect(result).not.toContain("✖ Limited higher education access");
+  expect(result).not.toContain("✖ Limited transport");
+});
+
+it("handles missing values safely without runtime failure", () => {
+  const result = getAreaSummary({
+    area: {
+      median_price: null,
+      school_count: null,
+      park_count: undefined,
+      university_count: null,
+      rail_tram_count: undefined,
+    },
+    filters: {
+      budget: true,
+      schools: true,
+      parks: true,
+      universities: true,
+      transport: true,
+    },
+    thresholds,
+    minBudget: 500000,
+    maxBudget: 750000,
+  });
+
+  expect(result).toContain("✖ Outside budget");
+  expect(result).toContain("✖ Limited school access");
+  expect(result).toContain("✖ Limited parks");
+  expect(result).toContain("✖ Limited higher education access");
+  expect(result).toContain("✖ Limited transport");
+});
 });
